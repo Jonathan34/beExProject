@@ -2,6 +2,7 @@ package com.bedroid.beEx;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +16,7 @@ import com.bedroid.beEx.dummy.DummyContent;
  * in two-pane mode (on tablets) or a {@link MailItemDetailActivity}
  * on handsets.
  */
-public class MailItemDetailFragment extends Fragment {
+public class MailItemDetailFragment extends FragmentActivity {
     /**
      * The fragment argument representing the item ID that this fragment
      * represents.
@@ -38,15 +39,15 @@ public class MailItemDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
+        if (savedInstanceState.containsKey(ARG_ITEM_ID)) {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
+            mItem = DummyContent.ITEM_MAP.get(savedInstanceState.getString(ARG_ITEM_ID));
         }
     }
 
-    @Override
+    //@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_mailitem_detail, container, false);

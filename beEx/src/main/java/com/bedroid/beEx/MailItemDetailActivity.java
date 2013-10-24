@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
+
 
 /**
  * An activity representing a single MailItem detail screen. This
@@ -41,14 +43,14 @@ public class MailItemDetailActivity extends FragmentActivity {
             arguments.putString(MailItemDetailFragment.ARG_ITEM_ID,
                     getIntent().getStringExtra(MailItemDetailFragment.ARG_ITEM_ID));
             MailItemDetailFragment fragment = new MailItemDetailFragment();
-            fragment.setArguments(arguments);
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.mailitem_detail_container, fragment)
-                    .commit();
+            //fragment.setArguments(arguments);
+            //getSupportFragmentManager().beginTransaction()
+            //        .add(R.id.mailitem_detail_container, fragment)
+            //        .commit();
         }
     }
 
-    @Override
+    /*@Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
@@ -63,5 +65,5 @@ public class MailItemDetailActivity extends FragmentActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
-    }
+    }*/
 }
