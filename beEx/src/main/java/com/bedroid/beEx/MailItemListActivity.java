@@ -27,8 +27,34 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MailItemListActivity extends ActionBarActivity implements ActionBar.TabListener {
-//implements MailItemListFragment.Callbacks
+class TabListener implements ActionBar.TabListener {
+
+    private ActionBar.Tab tab;
+    public TabListener(ActionBar.Tab tabb){
+        this.tab = tabb;
+    }
+
+    @Override
+    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+        // This is called when a tab is selected.
+        /*Intent detailIntent = new Intent(this, MailItemDetailActivity.class);
+        detailIntent.putExtra(MailItemDetailFragment.ARG_ITEM_ID, tab.getText());
+        startActivity(detailIntent);*/
+    }
+
+    @Override
+    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+
+    }
+
+    @Override
+    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+
+    }
+}
+
+
+public class MailItemListActivity extends ActionBarActivity implements MailItemListFragment.Callbacks {
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -45,22 +71,10 @@ public class MailItemListActivity extends ActionBarActivity implements ActionBar
         ab.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
         // Add three tabs to the Action Bar for display
-        ab.addTab(ab.newTab().setText("Tab 1").setTabListener(this));
-        ab.addTab(ab.newTab().setText("Tab 2").setTabListener(this));
-
-      /*  if (findViewById(R.id.mailitem_detail_container) != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-large and
-            // res/values-sw600dp). If this view is present, then the
-            // activity should be in two-pane mode.
-            mTwoPane = true;
-
-            // In two-pane mode, list items should be given the
-            // 'activated' state when touched.
-            ((MailItemListFragment) getSupportFragmentManager()
-                    .findFragmentById(R.id.mailitem_list))
-                    .setActivateOnItemClick(true);
-        }*/
+        ActionBar.Tab a1 = ab.newTab();
+        ActionBar.Tab a2 = ab.newTab();
+        ab.addTab(a1.setText("Tab 1").setTabListener(new TabListener(a1)));
+        ab.addTab(a2.setText("Tab 2").setTabListener(new TabListener(a2)));
 
         // TODO: If exposing deep links into your app, handle intents here.
     }
@@ -85,18 +99,6 @@ public class MailItemListActivity extends ActionBarActivity implements ActionBar
         return true;
     }
 
-    /**
-     * Callback method from {@link MailItemListFragment.Callbacks}
-     * indicating that the item with the given ID was selected.
-     */
-    //@Override
-    public void onItemSelected(String id) {
-        // simply start the detail activity for the selected item ID.
-        Intent detailIntent = new Intent(this, MailItemDetailActivity.class);
-        detailIntent.putExtra(MailItemDetailFragment.ARG_ITEM_ID, id);
-        startActivity(detailIntent);
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -116,21 +118,11 @@ public class MailItemListActivity extends ActionBarActivity implements ActionBar
 
     }
 
-    // Implemented from ActionBar.TabListener
     @Override
-    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+    public void onItemSelected(String id) {
         // This is called when a tab is selected.
-    }
-
-    // Implemented from ActionBar.TabListener
-    @Override
-    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-        // This is called when a previously selected tab is unselected.
-    }
-
-    // Implemented from ActionBar.TabListener
-    @Override
-    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-        // This is called when a previously selected tab is selected again.
+        Intent detailIntent = new Intent(this, MailItemDetailActivity.class);
+        detailIntent.putExtra(MailItemDetailFragment.ARG_ITEM_ID, id);
+        startActivity(detailIntent);
     }
 }
