@@ -40,11 +40,12 @@ class TabListener implements ActionBar.TabListener {
         /*Intent detailIntent = new Intent(this, MailItemDetailActivity.class);
         detailIntent.putExtra(MailItemDetailFragment.ARG_ITEM_ID, tab.getText());
         startActivity(detailIntent);*/
+       //fragmentTransaction.add(R.id.mailitem_detail, tab, null);
     }
 
     @Override
     public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-
+        //fragmentTransaction.add(tab);
     }
 
     @Override
@@ -88,13 +89,17 @@ public class MailItemListActivity extends ActionBarActivity implements MailItemL
         // Inflate our menu from the resources by using the menu inflater.
         getMenuInflater().inflate(R.menu.main, menu);
 
+        /*
+        DYNAMICALLY ADD AN ITEM
+
         // It is also possible add items here. Use a generated id from
         // resources (ids.xml) to ensure that all menu ids are distinct.
-        MenuItem locationItem = menu.add(0, R.id.menu_location, 0, R.string.menu_location);
-        locationItem.setIcon(R.drawable.ic_action_location);
+        //MenuItem locationItem = menu.add(0, R.id.menu_location, 0, R.string.menu_location);
+        //locationItem.setIcon(R.drawable.ic_action_location);
 
         // Need to use MenuItemCompat methods to call any action item related methods
-        MenuItemCompat.setShowAsAction(locationItem, MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        //MenuItemCompat.setShowAsAction(locationItem, MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        */
 
         return true;
     }
@@ -106,12 +111,16 @@ public class MailItemListActivity extends ActionBarActivity implements MailItemL
                 // Here we might start a background refresh task
                 return true;
 
-            case R.id.menu_location:
+            case R.id.menu_add:
                 // Here we might call LocationManager.requestLocationUpdates()
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
                 return true;
 
             case R.id.menu_settings:
                 // Here we would open up our settings activity
+                Intent settingsIntent = new Intent(this, SettingsActivity.class);
+                startActivity(settingsIntent);
                 return true;
         }
         return true;
