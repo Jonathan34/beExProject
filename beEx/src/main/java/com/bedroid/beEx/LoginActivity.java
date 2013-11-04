@@ -3,7 +3,9 @@ package com.bedroid.beEx;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.Activity;
+//import android.app.Activity;
+import android.accounts.AccountAuthenticatorActivity;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,12 +16,22 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.CheckBox;
+
+import org.apache.commons.httpclient.Cookie;
+
+import java.net.URISyntaxException;
+
+import microsoft.exchange.webservices.data.ExchangeCredentials;
+import microsoft.exchange.webservices.data.ExchangeService;
+import microsoft.exchange.webservices.data.ExchangeVersion;
+import microsoft.exchange.webservices.data.WebCredentials;
 
 /**
  * Activity which displays a login screen to the user, offering registration as
  * well.
  */
-public class LoginActivity extends Activity {
+public class LoginActivity extends AccountAuthenticatorActivity {
     /**
      * A dummy authentication store containing known user names and passwords.
      * TODO: remove after connecting to a real authentication system.
@@ -42,10 +54,16 @@ public class LoginActivity extends Activity {
     // Values for email and password at the time of the login attempt.
     private String mEmail;
     private String mPassword;
+    private String mServerUrl;
+    private String mServerPort;
+    private boolean mServerSSL;
 
     // UI references.
     private EditText mEmailView;
     private EditText mPasswordView;
+    private EditText mServerUrlView;
+    private EditText mServerPortView;
+    private CheckBox mServerSSLView;
     private View mLoginFormView;
     private View mLoginStatusView;
     private TextView mLoginStatusMessageView;
@@ -57,10 +75,12 @@ public class LoginActivity extends Activity {
         setContentView(R.layout.activity_login);
 
         // Set up the login form.
+        //Email
         mEmail = getIntent().getStringExtra(EXTRA_EMAIL);
         mEmailView = (EditText) findViewById(R.id.email);
         mEmailView.setText(mEmail);
 
+        //Password
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -73,6 +93,7 @@ public class LoginActivity extends Activity {
             }
         });
 
+        //View
         mLoginFormView = findViewById(R.id.login_form);
         mLoginStatusView = findViewById(R.id.login_status);
         mLoginStatusMessageView = (TextView) findViewById(R.id.login_status_message);
@@ -83,6 +104,18 @@ public class LoginActivity extends Activity {
                 attemptLogin();
             }
         });
+
+        //Server URL
+        mServerUrlView = (EditText) findViewById(R.id.serverUrlText);
+
+        //Server Port
+        mServerPortView = (EditText) findViewById(R.id.serverPortNumber);
+
+        //Server SSL
+        mServerSSLView = (CheckBox) findViewById(R.id.checkBoxSSL);
+        if (mServerSSLView.isChecked()) {
+            mServerSSLView.setChecked(false);
+        }
     }
 
 
@@ -198,6 +231,25 @@ public class LoginActivity extends Activity {
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
+            /************************************************************/
+            ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
+
+            ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
+            service.setCredentials(credentials);
+            Cookie[] c = service.getCookies();
+            try {
+                service.setUrl(new java.net.URI(mServerUrl));
+                service.autodiscoverUrl(mEmail);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+            /************************************************************/
+
+
 
             try {
                 // Simulate network access.
