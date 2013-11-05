@@ -71,10 +71,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="support-v4-18.0.0" level="project" />
     <orderEntry type="library" exported="" name="ComAndroidSupportAppcompatV71800.aar" level="project" />
-    <orderEntry type="library" exported="" name="EWSJavaAPI_1.2" level="project" />
-    <orderEntry type="library" exported="" name="commons-codec-1.2" level="project" />
     <orderEntry type="library" exported="" name="commons-httpclient-3.1" level="project" />
-    <orderEntry type="library" name="jwebservices-2.0" level="project" />
+    <orderEntry type="library" exported="" name="EWJSJavaAPI_1.2" level="project" />
   </component>
 </module>
 

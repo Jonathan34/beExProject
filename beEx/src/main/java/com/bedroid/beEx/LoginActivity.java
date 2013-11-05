@@ -18,7 +18,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.CheckBox;
 
-import com.independentsoft.exchange.Appointment;
+/*import com.independentsoft.exchange.Appointment;
 import com.independentsoft.exchange.AppointmentPropertyPath;
 import com.independentsoft.exchange.CalendarView;
 import com.independentsoft.exchange.FindItemResponse;
@@ -27,19 +27,19 @@ import com.independentsoft.exchange.RecurringMasterItemId;
 import com.independentsoft.exchange.Service;
 import com.independentsoft.exchange.ServiceException;
 import com.independentsoft.exchange.StandardFolder;
-
-//import org.apache.commons.httpclient.Cookie;
+*/
+import org.apache.commons.httpclient.Cookie;
 
 import java.net.URISyntaxException;
-import java.text.ParseException;
+/*import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Date;*/
 
-/*import microsoft.exchange.webservices.data.ExchangeCredentials;
+import microsoft.exchange.webservices.data.ExchangeCredentials;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.ExchangeVersion;
 import microsoft.exchange.webservices.data.WebCredentials;
-*/
+
 /**
  * Activity which displays a login screen to the user, offering registration as
  * well.
@@ -237,25 +237,23 @@ public class LoginActivity extends AccountAuthenticatorActivity {
      * the user.
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+
+
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
             /************************************************************/
-            /*try {
+            try {
                 ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
-
                 ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
                 service.setCredentials(credentials);
-                Cookie[] c = service.getCookies();
-
-                service.setUrl(new java.net.URI(mServerUrl));
                 service.autodiscoverUrl(mEmail);
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             } catch (Exception e) {
                 e.printStackTrace();
-            }*/
-            try {
+            }
+            /*try {
                 Service service = new Service(mServerUrl, mEmail, mPassword);
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date startTime = dateFormat.parse("2014-01-01 00:00:00");
@@ -291,11 +289,8 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 e.printStackTrace();
             } catch (ParseException e) {
                 e.printStackTrace();
-            }
+            }*/
             /************************************************************/
-
-
-
             try {
                 // Simulate network access.
                 Thread.sleep(2000);

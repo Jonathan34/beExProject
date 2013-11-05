@@ -1,9 +1,6 @@
 <component name="libraryTable">
   <library name="ComAndroidSupportAppcompatV71800.aar">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/beEx/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/classes.jar!/" />
-      <root url="jar://$PROJECT_DIR$/beEx/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/classes.jar!/" />
-    </CLASSES>
+    <CLASSES />
     <JAVADOC />
     <SOURCES />
   </library>
