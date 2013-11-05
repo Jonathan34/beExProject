@@ -42,11 +42,6 @@ public class LoginActivity extends AccountAuthenticatorActivity {
     };
 
     /**
-     * The default email to populate the email field with.
-     */
-    public static final String EXTRA_EMAIL = "com.example.android.authenticatordemo.extra.EMAIL";
-
-    /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
@@ -76,12 +71,12 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
         // Set up the login form.
         //Email
-        mEmail = getIntent().getStringExtra(EXTRA_EMAIL);
         mEmailView = (EditText) findViewById(R.id.email);
-        mEmailView.setText(mEmail);
+        mEmailView.setText("JDelfour@slb.com");
 
         //Password
         mPasswordView = (EditText) findViewById(R.id.password);
+        mPasswordView.setText("!Ym2qqqqqw");
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -107,15 +102,16 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
         //Server URL
         mServerUrlView = (EditText) findViewById(R.id.serverUrlText);
-
+        mServerUrlView.setText("mobile.slb.com");
         //Server Port
         mServerPortView = (EditText) findViewById(R.id.serverPortNumber);
 
         //Server SSL
         mServerSSLView = (CheckBox) findViewById(R.id.checkBoxSSL);
-        if (mServerSSLView.isChecked()) {
-            mServerSSLView.setChecked(false);
-        }
+        mServerSSLView.setChecked(true);
+        //if (mServerSSLView.isChecked()) {
+        //    mServerSSLView.setChecked(false);
+        //}
     }
 
 
