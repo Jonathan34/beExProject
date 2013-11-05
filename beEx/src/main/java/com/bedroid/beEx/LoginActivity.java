@@ -76,7 +76,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
         //Password
         mPasswordView = (EditText) findViewById(R.id.password);
-        mPasswordView.setText("!Ym2qqqqqw");
+        mPasswordView.setText("");
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -228,12 +228,13 @@ public class LoginActivity extends AccountAuthenticatorActivity {
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
             /************************************************************/
-            ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
-
-            ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
-            service.setCredentials(credentials);
-            Cookie[] c = service.getCookies();
             try {
+                ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
+
+                ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
+                service.setCredentials(credentials);
+                Cookie[] c = service.getCookies();
+
                 service.setUrl(new java.net.URI(mServerUrl));
                 service.autodiscoverUrl(mEmail);
             } catch (URISyntaxException e) {

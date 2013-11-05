@@ -1,11 +1,9 @@
 <component name="libraryTable">
   <library name="EWSJavaAPI_1.2">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../EWSJavaAPI_1.2/EWSJavaAPI_1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/beEx/libs/EWSJavaAPI_1.2.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="file://$PROJECT_DIR$/../EWSJavaAPI_1.2/src" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>
