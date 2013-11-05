@@ -18,15 +18,28 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.CheckBox;
 
-import org.apache.commons.httpclient.Cookie;
+import com.independentsoft.exchange.Appointment;
+import com.independentsoft.exchange.AppointmentPropertyPath;
+import com.independentsoft.exchange.CalendarView;
+import com.independentsoft.exchange.FindItemResponse;
+import com.independentsoft.exchange.InstanceType;
+import com.independentsoft.exchange.RecurringMasterItemId;
+import com.independentsoft.exchange.Service;
+import com.independentsoft.exchange.ServiceException;
+import com.independentsoft.exchange.StandardFolder;
+
+//import org.apache.commons.httpclient.Cookie;
 
 import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-import microsoft.exchange.webservices.data.ExchangeCredentials;
+/*import microsoft.exchange.webservices.data.ExchangeCredentials;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.ExchangeVersion;
 import microsoft.exchange.webservices.data.WebCredentials;
-
+*/
 /**
  * Activity which displays a login screen to the user, offering registration as
  * well.
@@ -228,7 +241,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
             /************************************************************/
-            try {
+            /*try {
                 ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
 
                 ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
@@ -241,9 +254,44 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 e.printStackTrace();
             } catch (Exception e) {
                 e.printStackTrace();
+            }*/
+            try {
+                Service service = new Service(mServerUrl, mEmail, mPassword);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date startTime = dateFormat.parse("2014-01-01 00:00:00");
+                Date endTime = dateFormat.parse("2014-02-01 00:00:00");
+
+                CalendarView view = new CalendarView(startTime, endTime);
+
+                FindItemResponse response = service.findItem(StandardFolder.CALENDAR, AppointmentPropertyPath.getAllPropertyPaths(), view);
+
+                for (int i = 0; i < response.getItems().size(); i++)
+                {
+                    if (response.getItems().get(i) instanceof Appointment)
+                    {
+                        Appointment appointment = (Appointment) response.getItems().get(i);
+
+                        System.out.println("Subject = " + appointment.getSubject());
+                        System.out.println("StartTime = " + appointment.getStartTime());
+                        System.out.println("EndTime = " + appointment.getEndTime());
+                        System.out.println("Body Preview = " + appointment.getBodyPlainText());
+                        System.out.println("----------------------------------------------------------------");
+
+                        if (appointment.getInstanceType() == InstanceType.OCCURRENCE)
+                        {
+                            RecurringMasterItemId masterId = new RecurringMasterItemId(appointment.getItemId().getId(), appointment.getItemId().getChangeKey());
+
+                            Appointment master = service.getAppointment(masterId);
+
+                        }
+                    }
+                }
             }
-
-
+            catch (ServiceException e) {
+                e.printStackTrace();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
             /************************************************************/
 
 
