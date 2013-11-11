@@ -9,5 +9,6 @@
         Action Bar. Items that are not shown as action items on the Action Bar are displayed in
         the action bar overflow.</string>
     <string name="menu_add">Add new account</string>
-    <string name="authlabel">authlabel</string>
+    <string name="authlabel">beExchange</string>
+
 </resources>

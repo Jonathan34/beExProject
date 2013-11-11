@@ -11,8 +11,8 @@ import android.content.Intent;
 import android.os.Bundle;
 
 public class Authenticator extends AbstractAccountAuthenticator {
-    public static final String AUTHTOKEN_TYPE = "com.bedroid.beEx.sync";
-    public static final String ACCOUNT_TYPE   = "com.bedroid.beEx.sync";
+    public static final String AUTHTOKEN_TYPE = "com.bedroid.beEx.authsync";
+    public static final String ACCOUNT_TYPE   = "com.bedroid.beEx.authsync";
     private final Context context;
 
     public Authenticator(Context context) {

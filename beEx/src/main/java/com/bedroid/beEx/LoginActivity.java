@@ -153,10 +153,16 @@ public class LoginActivity extends AccountAuthenticatorActivity {
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
+        mServerUrlView.setError(null);
+        mServerPortView.setError(null);
+        mServerSSLView.setError(null);
 
         // Store values at the time of the login attempt.
-        mEmail = mEmailView.getText().toString();
-        mPassword = mPasswordView.getText().toString();
+        mEmail      = mEmailView.getText().toString();
+        mPassword   = mPasswordView.getText().toString();
+        mServerPort = mServerPortView.getText().toString();
+        mServerUrl  = mServerUrlView.getText().toString();
+        mServerSSL  = mServerSSLView.isChecked();
 
         boolean cancel = false;
         View focusView = null;
@@ -181,6 +187,18 @@ public class LoginActivity extends AccountAuthenticatorActivity {
             mEmailView.setError(getString(R.string.error_invalid_email));
             focusView = mEmailView;
             cancel = true;
+        }
+
+        // Check for a valid server
+        if (TextUtils.isEmpty(mServerUrl)) {
+            mServerUrlView.setError(getString(R.string.error_field_required));
+            focusView = mServerUrlView;
+            cancel = true;
+        } else if (!mServerUrl.contains("http")) {
+            String prefix = "http://";
+            if(mServerSSL == true)
+                prefix = "https://";
+            mServerUrl = prefix + mServerUrl;
         }
 
         if (cancel) {
@@ -252,7 +270,8 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
                 ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
                 service.setCredentials(credentials);
-                service.setUrl(new URI(mServerUrl));
+                URI url = new URI(mServerUrl);
+                service.setUrl(url);
 
                 FindFoldersResults findResults = service.findFolders(WellKnownFolderName.Inbox, new FolderView(Integer.MAX_VALUE));
 
