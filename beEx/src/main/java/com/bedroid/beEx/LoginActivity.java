@@ -30,6 +30,7 @@ import com.independentsoft.exchange.StandardFolder;
 */
 import org.apache.commons.httpclient.Cookie;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 /*import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -38,7 +39,11 @@ import java.util.Date;*/
 import microsoft.exchange.webservices.data.ExchangeCredentials;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.ExchangeVersion;
+import microsoft.exchange.webservices.data.FindFoldersResults;
+import microsoft.exchange.webservices.data.Folder;
+import microsoft.exchange.webservices.data.FolderView;
 import microsoft.exchange.webservices.data.WebCredentials;
+import microsoft.exchange.webservices.data.WellKnownFolderName;
 
 /**
  * Activity which displays a login screen to the user, offering registration as
@@ -115,7 +120,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
         //Server URL
         mServerUrlView = (EditText) findViewById(R.id.serverUrlText);
-        mServerUrlView.setText("mobile.slb.com");
+        mServerUrlView.setText("https://mobile.slb.com/EWS/Exchange.asmx");
         //Server Port
         mServerPortView = (EditText) findViewById(R.id.serverPortNumber);
 
@@ -247,7 +252,15 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
                 ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
                 service.setCredentials(credentials);
-                service.autodiscoverUrl(mEmail);
+                service.setUrl(new URI(mServerUrl));
+
+                FindFoldersResults findResults = service.findFolders(WellKnownFolderName.Inbox, new FolderView(Integer.MAX_VALUE));
+
+                for(Folder folder : findResults.getFolders())
+                {
+                    System.out.println("Count======"+folder.getChildFolderCount());
+                    System.out.println("Name======="+folder.getDisplayName());
+                }
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             } catch (Exception e) {

@@ -2,6 +2,11 @@ package com.bedroid.beEx;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 
 /**
  * An activity representing a list of MailItems. This activity
@@ -19,13 +24,6 @@ import android.os.Bundle;
  * {@link MailItemListFragment.Callbacks} interface
  * to listen for item selections.
  */
-
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 
 class TabListener implements ActionBar.TabListener {
 
@@ -78,6 +76,11 @@ public class MailItemListActivity extends ActionBarActivity implements MailItemL
         ab.addTab(a2.setText("Tab 2").setTabListener(new TabListener(a2)));
 
         // TODO: If exposing deep links into your app, handle intents here.
+
+
+        //System.setProperty("javax.xml.stream.XMLInputFactory", "com.sun.xml.stream.ZephyrParserFactory");
+        //System.setProperty("javax.xml.stream.XMLOutputFactory", "com.sun.xml.stream.ZephyrWriterFactory");
+        //System.setProperty("javax.xml.stream.XMLStreamConstants", "com.javax.xml.stream.XMLStreamConstants");
     }
 
     /**
