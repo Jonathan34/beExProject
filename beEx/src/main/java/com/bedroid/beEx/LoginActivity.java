@@ -32,16 +32,28 @@ import org.apache.commons.httpclient.Cookie;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 /*import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;*/
 
+import microsoft.exchange.webservices.data.Appointment;
+import microsoft.exchange.webservices.data.AutodiscoverService;
+import microsoft.exchange.webservices.data.BasePropertySet;
+import microsoft.exchange.webservices.data.BodyType;
+import microsoft.exchange.webservices.data.CalendarFolder;
+import microsoft.exchange.webservices.data.CalendarView;
 import microsoft.exchange.webservices.data.ExchangeCredentials;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.ExchangeVersion;
 import microsoft.exchange.webservices.data.FindFoldersResults;
+import microsoft.exchange.webservices.data.FindItemResponse;
+import microsoft.exchange.webservices.data.FindItemsResults;
 import microsoft.exchange.webservices.data.Folder;
 import microsoft.exchange.webservices.data.FolderView;
+import microsoft.exchange.webservices.data.MessageBody;
+import microsoft.exchange.webservices.data.PropertySet;
 import microsoft.exchange.webservices.data.WebCredentials;
 import microsoft.exchange.webservices.data.WellKnownFolderName;
 
@@ -272,14 +284,33 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 service.setCredentials(credentials);
                 URI url = new URI(mServerUrl);
                 service.setUrl(url);
+                //service.autodiscoverUrl(mEmail);
 
-                FindFoldersResults findResults = service.findFolders(WellKnownFolderName.Inbox, new FolderView(Integer.MAX_VALUE));
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date startTime = dateFormat.parse("2013-11-10 00:00:00");
+                Date endTime = dateFormat.parse("2013-11-15 00:00:00");
+
+                CalendarView view = new CalendarView(startTime, endTime);
+
+                CalendarFolder folder = CalendarFolder.bind(service, WellKnownFolderName.Calendar);
+                FindItemsResults<Appointment> results = folder.findAppointments(view);
+
+                for (Appointment appointment : results.getItems())
+                {
+                    System.out.println("appointment======" + appointment.getSubject()) ;
+                    //find appointments will only give basic properties.
+                    //in order to get more properties (such as BODY), we need to call call EWS again
+                    //Appointment appointmentDetailed = Appointment.bind(service, appointment.getId(), );
+                }
+
+
+                /*FindFoldersResults findResults = service.findFolders(WellKnownFolderName.Inbox, new FolderView(Integer.MAX_VALUE));
 
                 for(Folder folder : findResults.getFolders())
                 {
                     System.out.println("Count======"+folder.getChildFolderCount());
                     System.out.println("Name======="+folder.getDisplayName());
-                }
+                }*/
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             } catch (Exception e) {
