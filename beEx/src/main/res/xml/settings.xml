@@ -22,17 +22,17 @@
         </Preference>
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/pref_header_general">
+    <!--<PreferenceCategory android:title="@string/pref_header_general">
         <CheckBoxPreference
             android:key="notifications_new_message"
             android:title="@string/pref_title_new_message_notifications"
             android:defaultValue="true" />
 
         <intent
-            android:action="es.tid.popcha.settings.ACCOUNT_SETUP"
+            android:action="com.bedroid.beEx.ACCOUNT_SETUP"
             android:targetPackage="es.tid.popcha.settings"
             android:targetClass="es.tid.popcha.settings.Preferences"
             />
-    </PreferenceCategory>
+    </PreferenceCategory>-->
 
 </PreferenceScreen>

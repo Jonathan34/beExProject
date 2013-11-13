@@ -1,5 +1,7 @@
 package com.bedroid.beEx;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
@@ -62,15 +64,6 @@ import microsoft.exchange.webservices.data.WellKnownFolderName;
  * well.
  */
 public class LoginActivity extends AccountAuthenticatorActivity {
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello",
-            "bar@example.com:world"
-    };
-
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -276,7 +269,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
+            // attempt authentication against the network service.
             /************************************************************/
             try {
                 ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
@@ -286,7 +279,8 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 service.setUrl(url);
                 //service.autodiscoverUrl(mEmail);
 
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                //CALENDAR
+                /*SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Date startTime = dateFormat.parse("2013-11-10 00:00:00");
                 Date endTime = dateFormat.parse("2013-11-15 00:00:00");
 
@@ -301,9 +295,9 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                     //find appointments will only give basic properties.
                     //in order to get more properties (such as BODY), we need to call call EWS again
                     //Appointment appointmentDetailed = Appointment.bind(service, appointment.getId(), );
-                }
+                }*/
 
-
+                //EMAIL
                 /*FindFoldersResults findResults = service.findFolders(WellKnownFolderName.Inbox, new FolderView(Integer.MAX_VALUE));
 
                 for(Folder folder : findResults.getFolders())
@@ -316,60 +310,25 @@ public class LoginActivity extends AccountAuthenticatorActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            /*try {
-                Service service = new Service(mServerUrl, mEmail, mPassword);
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                Date startTime = dateFormat.parse("2014-01-01 00:00:00");
-                Date endTime = dateFormat.parse("2014-02-01 00:00:00");
 
-                CalendarView view = new CalendarView(startTime, endTime);
-
-                FindItemResponse response = service.findItem(StandardFolder.CALENDAR, AppointmentPropertyPath.getAllPropertyPaths(), view);
-
-                for (int i = 0; i < response.getItems().size(); i++)
-                {
-                    if (response.getItems().get(i) instanceof Appointment)
-                    {
-                        Appointment appointment = (Appointment) response.getItems().get(i);
-
-                        System.out.println("Subject = " + appointment.getSubject());
-                        System.out.println("StartTime = " + appointment.getStartTime());
-                        System.out.println("EndTime = " + appointment.getEndTime());
-                        System.out.println("Body Preview = " + appointment.getBodyPlainText());
-                        System.out.println("----------------------------------------------------------------");
-
-                        if (appointment.getInstanceType() == InstanceType.OCCURRENCE)
-                        {
-                            RecurringMasterItemId masterId = new RecurringMasterItemId(appointment.getItemId().getId(), appointment.getItemId().getChangeKey());
-
-                            Appointment master = service.getAppointment(masterId);
-
-                        }
-                    }
-                }
-            }
-            catch (ServiceException e) {
-                e.printStackTrace();
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }*/
-            /************************************************************/
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
-
-            for (String credential : DUMMY_CREDENTIALS) {
+            /*for (String credential : DUMMY_CREDENTIALS) {
                 String[] pieces = credential.split(":");
                 if (pieces[0].equals(mEmail)) {
                     // Account exists, return true if the password matches.
                     return pieces[1].equals(mPassword);
                 }
+            }*/
+            AccountManager am = AccountManager.get(getBaseContext());
+            Account[] accounts = am.getAccountsByType("com.bedroid.beEx.account");
+            if(accounts != null && accounts.length > 0)
+                return true;
+
+            Account account = new Account(mEmail, "com.bedroid.beEx.account");
+            if (am.addAccountExplicitly(account, mPassword, null)) {
+                System.out.println("OK");
             }
 
-            // TODO: register the new account here.
+                // TODO: register the new account here.
             return true;
         }
 

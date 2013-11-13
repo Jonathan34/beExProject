@@ -4,6 +4,12 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+
     <uses-sdk
         android:minSdkVersion="14"
         android:targetSdkVersion="18" />
@@ -42,9 +48,10 @@
             android:windowSoftInputMode="adjustResize|stateVisible" >
         </activity>
 
-        <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+        <!-- Authentication Service -->
 
-        <service android:name="authsync.AuthenticationService">
+
+        <service android:name=".authsync.AuthenticationService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -54,4 +61,6 @@
 
     </application>
 
+
+    
 </manifest>

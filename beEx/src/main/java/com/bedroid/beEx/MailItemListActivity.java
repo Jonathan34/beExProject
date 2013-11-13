@@ -123,6 +123,7 @@ public class MailItemListActivity extends ActionBarActivity implements MailItemL
             case R.id.menu_settings:
                 // Here we would open up our settings activity
                 Intent settingsIntent = new Intent(this, SettingsActivity.class);
+                settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(settingsIntent);
                 return true;
         }
