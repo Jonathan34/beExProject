@@ -8,6 +8,10 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.bedroid.beEx.helper.ExchangeHelper;
+
+import microsoft.exchange.webservices.data.ExchangeService;
+
 /**
  * An activity representing a list of MailItems. This activity
  * has different presentations for handset and tablet-size devices. On
@@ -81,6 +85,8 @@ public class MailItemListActivity extends ActionBarActivity implements MailItemL
         //System.setProperty("javax.xml.stream.XMLInputFactory", "com.sun.xml.stream.ZephyrParserFactory");
         //System.setProperty("javax.xml.stream.XMLOutputFactory", "com.sun.xml.stream.ZephyrWriterFactory");
         //System.setProperty("javax.xml.stream.XMLStreamConstants", "com.javax.xml.stream.XMLStreamConstants");
+
+        //ExchangeHelper.getInstance().initializeContext(getBaseContext());
     }
 
     /**

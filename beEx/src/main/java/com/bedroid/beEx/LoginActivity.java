@@ -30,6 +30,8 @@ import com.independentsoft.exchange.Service;
 import com.independentsoft.exchange.ServiceException;
 import com.independentsoft.exchange.StandardFolder;
 */
+import com.bedroid.beEx.helper.ExchangeHelper;
+
 import org.apache.commons.httpclient.Cookie;
 
 import java.net.URI;
@@ -47,6 +49,7 @@ import microsoft.exchange.webservices.data.BodyType;
 import microsoft.exchange.webservices.data.CalendarFolder;
 import microsoft.exchange.webservices.data.CalendarView;
 import microsoft.exchange.webservices.data.ExchangeCredentials;
+import microsoft.exchange.webservices.data.ExchangeServerInfo;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.ExchangeVersion;
 import microsoft.exchange.webservices.data.FindFoldersResults;
@@ -73,6 +76,8 @@ public class LoginActivity extends AccountAuthenticatorActivity {
     private String mEmail;
     private String mPassword;
     private String mServerUrl;
+    // https://mail.domain.com/EWS/Exchange.asmx .
+    // see http://nuanceimaging.custhelp.com/app/answers/detail/a_id/13098
     private String mServerPort;
     private boolean mServerSSL;
 
@@ -199,7 +204,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
             mServerUrlView.setError(getString(R.string.error_field_required));
             focusView = mServerUrlView;
             cancel = true;
-        } else if (!mServerUrl.contains("http")) {
+        } else if (!mServerUrl.startsWith("http") && !mServerUrl.startsWith("https")) {
             String prefix = "http://";
             if(mServerSSL == true)
                 prefix = "https://";
@@ -272,30 +277,16 @@ public class LoginActivity extends AccountAuthenticatorActivity {
             // attempt authentication against the network service.
             /************************************************************/
             try {
-                ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
+                /*ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
                 ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
                 service.setCredentials(credentials);
                 URI url = new URI(mServerUrl);
-                service.setUrl(url);
-                //service.autodiscoverUrl(mEmail);
+                service.setUrl(url);*/
+                //ExchangeService service = ExchangeHelper.getInstance().connectToExchange(mServerUrl, mEmail, mPassword);
+                //System.out.println(service.getUrl().toString());
 
                 //CALENDAR
-                /*SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                Date startTime = dateFormat.parse("2013-11-10 00:00:00");
-                Date endTime = dateFormat.parse("2013-11-15 00:00:00");
-
-                CalendarView view = new CalendarView(startTime, endTime);
-
-                CalendarFolder folder = CalendarFolder.bind(service, WellKnownFolderName.Calendar);
-                FindItemsResults<Appointment> results = folder.findAppointments(view);
-
-                for (Appointment appointment : results.getItems())
-                {
-                    System.out.println("appointment======" + appointment.getSubject()) ;
-                    //find appointments will only give basic properties.
-                    //in order to get more properties (such as BODY), we need to call call EWS again
-                    //Appointment appointmentDetailed = Appointment.bind(service, appointment.getId(), );
-                }*/
+                //ExchangeHelper.getInstance().getCalendarTest();
 
                 //EMAIL
                 /*FindFoldersResults findResults = service.findFolders(WellKnownFolderName.Inbox, new FolderView(Integer.MAX_VALUE));
@@ -305,8 +296,8 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                     System.out.println("Count======"+folder.getChildFolderCount());
                     System.out.println("Name======="+folder.getDisplayName());
                 }*/
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
+            /*} catch (URISyntaxException e) {
+                e.printStackTrace();*/
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -325,6 +316,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
             Account account = new Account(mEmail, "com.bedroid.beEx.account");
             if (am.addAccountExplicitly(account, mPassword, null)) {
+                am.setUserData(account, "SERVER_URL", mServerUrl);
                 System.out.println("OK");
             }
 
