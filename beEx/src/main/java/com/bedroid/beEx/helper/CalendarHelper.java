@@ -1,19 +1,31 @@
 package com.bedroid.beEx.helper;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
+import android.util.Log;
 
+import com.bedroid.beEx.entity.CalendarEntity;
+
+import java.util.Date;
 import java.util.TimeZone;
 
-/**
- * Created by Jon on 11/14/13.
- */
+import microsoft.exchange.webservices.data.Appointment;
+import microsoft.exchange.webservices.data.Attendee;
+import microsoft.exchange.webservices.data.AttendeeCollection;
+import microsoft.exchange.webservices.data.MeetingResponseType;
+import microsoft.exchange.webservices.data.ServiceLocalException;
+
+import static java.lang.Long.*;
+
 public class CalendarHelper {
+    private static final String TAG = "CalendarHelper";
+
     // Projection array. Creating indices for this array instead of doing
     // dynamic lookups improves performance.
     private static final String[] EVENT_PROJECTION = new String[] {
@@ -32,33 +44,119 @@ public class CalendarHelper {
     private static final int PROJECTION_DISPLAY_NAME_INDEX = 1;
     private static final int PROJECTION_COLOR_INDEX = 2;
 
-    public static void addCalendar(Account account, ContentResolver cr) {
+
+    public static String addCalendar(Account account, ContentResolver cr) {
         if (account == null)
             throw new IllegalArgumentException();
 
         final ContentValues cv = buildContentValues(account);
 
         Uri calUri = buildCalUri(account);
-        cr.insert(calUri, cv);
-    }
+        Uri uri = cr.insert(calUri, cv);
 
-    public static String addCalendarEntry(ContentResolver cr, long id, long start, long end, String title, String descr, boolean isAllDay) {
-        // Insert Event
-        ContentValues values = new ContentValues();
-        TimeZone timeZone = TimeZone.getDefault();
-        values.put(CalendarContract.Events.DTSTART, start);
-        values.put(CalendarContract.Events.DTEND, end);
-        values.put(CalendarContract.Events.EVENT_TIMEZONE, timeZone.getID());
-        values.put(CalendarContract.Events.TITLE, title);
-        values.put(CalendarContract.Events.DESCRIPTION, descr);
-        values.put(CalendarContract.Events.CALENDAR_ID, id);
-        Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
-
-        // Retrieve ID for new event
         String eventID = uri.getLastPathSegment();
         return eventID;
     }
 
+    public boolean getCalendarEvent(ContentResolver cr, long event_id) {
+        String[] proj = new String[]{
+                CalendarContract.Events._ID,
+                CalendarContract.Events.DTSTART,
+                CalendarContract.Events.DTEND,
+                CalendarContract.Events.RRULE,
+                CalendarContract.Events.TITLE};
+        Cursor cursor = cr.
+                        query(
+                                CalendarContract.Events.CONTENT_URI,
+                                proj,
+                                CalendarContract.Events._ID + " = ? ",
+                                new String[]{Long.toString(event_id)},
+                                null);
+        if (cursor.moveToFirst()) {
+            // read event data
+            Log.i(TAG, "Found a matching entry for event id: " + event_id);
+            return true;
+        }
+        Log.i(TAG, "Impossible to find a matching entry for event id: " + event_id);
+        return false;
+    }
+
+    public static String addCalendarEntry(ContentResolver cr, long cal_id, Appointment appointment
+    /*, long event_id, long start, long end, String title, String descr, boolean isAllDay*/) throws ServiceLocalException {
+        // Insert Event
+        ContentValues values = CalendarEntity.getContentValuesFromAppointment(cal_id, appointment);
+
+        //values.put(CalendarContract.Events.SYNC_DATA1, appointment.getId().getUniqueId());
+        Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
+
+        // Retrieve ID for new event
+        String eventID = uri.getLastPathSegment();
+
+        // adding an attendee:
+        AttendeeCollection req = appointment.getRequiredAttendees();
+        AttendeeCollection opt = appointment.getOptionalAttendees();
+        AttendeeCollection res = appointment.getResources();
+        for (Attendee a : req){
+            values.clear();
+            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
+            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_REQUIRED);
+            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
+            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
+            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
+            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
+        }
+        for (Attendee a : opt){
+            values.clear();
+            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
+            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_OPTIONAL);
+            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
+            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
+            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
+            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
+        }
+        for (Attendee a : res){
+            values.clear();
+            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
+            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_RESOURCE);
+            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
+            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
+            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
+            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
+        }
+        return eventID;
+    }
+
+    //this is bugged in exchange server, workaround is to loop over all emails to look for the accept message
+    private static int getStatusFormAppointment(MeetingResponseType m) {
+        if(m == MeetingResponseType.Accept)
+            return CalendarContract.Attendees.ATTENDEE_STATUS_ACCEPTED;
+        else if(m == MeetingResponseType.NoResponseReceived)
+            return CalendarContract.Attendees.ATTENDEE_STATUS_INVITED;
+        else if(m == MeetingResponseType.Decline)
+            return CalendarContract.Attendees.ATTENDEE_STATUS_DECLINED;
+        else if(m == MeetingResponseType.Tentative)
+            return CalendarContract.Attendees.ATTENDEE_STATUS_TENTATIVE;
+        else if(m == MeetingResponseType.Unknown)
+            return CalendarContract.Attendees.ATTENDEE_STATUS_NONE;
+        return CalendarContract.Attendees.ATTENDEE_STATUS_NONE;
+    }
+
+    public static void clearCalendarEntries(ContentResolver cr, Account account, String cal_id) {
+        String selection = "(" + CalendarContract.Events.CALENDAR_ID + " = ?)";
+
+        String[] selectionArgs = new String[] { cal_id };
+        int rows = cr.delete(CalendarContract.Events.CONTENT_URI, selection, selectionArgs);
+        Log.i(TAG, rows + " events deleted");
+    }
+
+    public static int deleteCalendarEntry(ContentResolver cr, long event_id) {
+        String[] selArgs = new String[]{Long.toString(event_id)};
+        int deleted =
+                cr.delete(CalendarContract.Events.CONTENT_URI,
+                          CalendarContract.Events._ID + " =? ",
+                          selArgs);
+        return deleted;
+    }
 
     public static boolean deleteCalendar(long id, Account account, ContentResolver cr) {
         if (id < 0)
@@ -76,7 +174,6 @@ public class CalendarHelper {
                 .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_TYPE, CalendarContract.ACCOUNT_TYPE_LOCAL)
                 .build();
     }
-
 
     private static ContentValues buildContentValues(Account account) {
         final ContentValues cv = new ContentValues();
@@ -105,18 +202,14 @@ public class CalendarHelper {
 
         // Use the cursor to step through the returned records
         while (cur.moveToNext()) {
-            long id = 0;
-            String name = null;
-            int color;
-
             // Get the field values
-            id = cur.getLong(PROJECTION_ID_INDEX);
-            name = cur.getString(PROJECTION_DISPLAY_NAME_INDEX);
-            color = cur.getInt(PROJECTION_COLOR_INDEX);
+            long id = cur.getLong(PROJECTION_ID_INDEX);
+            String name = cur.getString(PROJECTION_DISPLAY_NAME_INDEX);
+            int color = cur.getInt(PROJECTION_COLOR_INDEX);
 
+            /*System.out.println(name);
             System.out.println(id);
-            System.out.println(name);
-            System.out.println(color);
+            System.out.println(color);*/
 
             if(name == account.name)
                 return id;

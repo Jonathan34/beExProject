@@ -1,15 +1,18 @@
 package com.bedroid.beEx.authsync;
 
 import com.bedroid.beEx.LoginActivity;
+import com.bedroid.beEx.helper.CalendarHelper;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
+import android.accounts.NetworkErrorException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.net.URI;
 
@@ -39,6 +42,7 @@ import microsoft.exchange.webservices.data.WebCredentials;
 public class Authenticator extends AbstractAccountAuthenticator {
     public static final String AUTHTOKEN_TYPE = "com.bedroid.beEx.authsync";
     public static final String ACCOUNT_TYPE   = "com.bedroid.beEx.account";
+    private static final String TAG = "Authenticator";
     private final Context mContext;
 
     public Authenticator(Context context) {
@@ -128,5 +132,33 @@ public class Authenticator extends AbstractAccountAuthenticator {
     public Bundle updateCredentials(AccountAuthenticatorResponse response,
                                     Account account, String authTokenType, Bundle loginOptions) {
         return null;
+    }
+
+    @Override
+    public Bundle getAccountRemovalAllowed(
+            AccountAuthenticatorResponse response, Account account)
+            throws NetworkErrorException {
+        Bundle result = super.getAccountRemovalAllowed(response, account);
+
+        if (result != null && result.containsKey(AccountManager.KEY_BOOLEAN_RESULT)
+                && !result.containsKey(AccountManager.KEY_INTENT)) {
+            final boolean removalAllowed = result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT);
+
+            if (removalAllowed) {
+                // Do my removal stuff here
+                Log.i(TAG, "Account removed, need to clean up the calendar");
+                final AccountManager am = AccountManager.get(mContext);
+                String id = am.getUserData(account, "CALENDAR_ID");
+                if(id == null) {
+                    Log.e(TAG, "There is no associated calendar to this account");
+                    return result;
+                }
+                if(!CalendarHelper.deleteCalendar(Long.parseLong(id), account, mContext.getContentResolver())) {
+                    Log.e(TAG, "Impossible to delete the calendar associated to this account");
+                }
+            }
+        }
+
+        return result;
     }
 }

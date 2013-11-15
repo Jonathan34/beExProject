@@ -107,15 +107,8 @@ public class ExchangeHelper {
         }
         //CALENDAR
         Calendar cal = Calendar.getInstance();
-        //SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
         Date startTime = cal.getTime();
-        //String startTimeStr = dateFormat.format(now);
-        //now = Date.parse(startTimeStr);
-
-
-        cal.add(Calendar.DAY_OF_YEAR, 1); // TODO configure the number of weeks
-        //Date endTime = dateFormat.parse(dateFormat.format(cal));
+        cal.add(Calendar.DAY_OF_YEAR, 5); // TODO configure the number of weeks
         Date endTime = cal.getTime();
 
         CalendarView view = new CalendarView(startTime, endTime);

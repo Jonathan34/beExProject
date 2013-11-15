@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
@@ -30,6 +31,7 @@ import com.independentsoft.exchange.Service;
 import com.independentsoft.exchange.ServiceException;
 import com.independentsoft.exchange.StandardFolder;
 */
+import com.bedroid.beEx.helper.CalendarHelper;
 import com.bedroid.beEx.helper.ExchangeHelper;
 
 import org.apache.commons.httpclient.Cookie;
@@ -67,6 +69,9 @@ import microsoft.exchange.webservices.data.WellKnownFolderName;
  * well.
  */
 public class LoginActivity extends AccountAuthenticatorActivity {
+
+    private static final String TAG = "LoginActivity";
+
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -309,18 +314,24 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                     return pieces[1].equals(mPassword);
                 }
             }*/
+
+            //Retrieve if the account exists and return it
             AccountManager am = AccountManager.get(getBaseContext());
             Account[] accounts = am.getAccountsByType("com.bedroid.beEx.account");
-            if(accounts != null && accounts.length > 0)
+            if(accounts != null && accounts.length > 0) {
+                Log.i(TAG, "The account already exists");
                 return true;
-
-            Account account = new Account(mEmail, "com.bedroid.beEx.account");
-            if (am.addAccountExplicitly(account, mPassword, null)) {
-                am.setUserData(account, "SERVER_URL", mServerUrl);
-                System.out.println("OK");
             }
 
-                // TODO: register the new account here.
+            //Register a new account and associate a calendar to it
+            Account account = new Account(mEmail, "com.bedroid.beEx.account");
+            if (am.addAccountExplicitly(account, mPassword, null)) {
+                String calId = CalendarHelper.addCalendar(account, getBaseContext().getContentResolver());
+                Log.i(TAG, "Adding calendar " + calId + " with url " + mServerUrl);
+                am.setUserData(account, "CALENDAR_ID", calId);
+                am.setUserData(account, "SERVER_URL", mServerUrl);
+            }
+
             return true;
         }
 
