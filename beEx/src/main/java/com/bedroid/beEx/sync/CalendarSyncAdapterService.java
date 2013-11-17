@@ -6,31 +6,20 @@ import android.accounts.OperationCanceledException;
 import android.app.Service;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SyncResult;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.CalendarContract;
-import android.support.v7.appcompat.R;
 import android.util.Log;
 
-import com.bedroid.beEx.entity.CalendarEntity;
+import com.bedroid.beEx.entity.CalendarEntry;
 import com.bedroid.beEx.helper.CalendarHelper;
 import com.bedroid.beEx.helper.ExchangeHelper;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import microsoft.exchange.webservices.data.Appointment;
 import microsoft.exchange.webservices.data.ExchangeService;
@@ -63,6 +52,11 @@ import microsoft.exchange.webservices.data.FindItemsResults;
                 ExchangeHelper eh = ExchangeHelper.getInstance();
                 ExchangeService service = eh.connectToExchange(mContext);
 
+                // 1.a Retrieve local items
+                List<CalendarEntry> localItems = CalendarHelper.loadFromLocalCalendar(mContext, account);
+
+                // 1.b Retrieve remote items
+                List<CalendarEntry> remoteItems = CalendarHelper.loadFromRemoteCalendar(mContext);
                 System.out.println("Check if exist");
             /*long id = CalendarHelper.fetchCalendars(account, context.getContentResolver());
             if(id == -1) {
@@ -100,7 +94,7 @@ import microsoft.exchange.webservices.data.FindItemsResults;
                         continue;
                     }
 
-                    //CalendarEntity.createFromAppointment(appointment);
+                    //CalendarEntry.createFromAppointment(appointment);
                     //Test if appointment already exists
                     /*String when = appointment.getWhen();
                     Date start = appointment.getStart();

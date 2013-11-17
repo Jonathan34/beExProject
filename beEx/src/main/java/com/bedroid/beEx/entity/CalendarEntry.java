@@ -7,9 +7,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import android.content.ContentValues;
-import android.net.Uri;
 import android.provider.CalendarContract;
-import android.text.format.Time;
 
 import microsoft.exchange.webservices.data.Appointment;
 import microsoft.exchange.webservices.data.ServiceLocalException;
@@ -17,13 +15,18 @@ import microsoft.exchange.webservices.data.ServiceLocalException;
 /**
  * Created by Jon on 11/14/13.
  */
-public class CalendarEntity {
+public class CalendarEntry {
+
+    private Appointment appointment;
+    private String subject;
+    private boolean allday;
 
     private long calendar_id;
-    private Appointment appointment;
-    private TimeZone timeZone;
 
-    public CalendarEntity(Appointment appointment, long calendar_id) {
+    private TimeZone timeZone;
+    private int color;
+
+    public CalendarEntry(Appointment appointment, long calendar_id) {
         this.appointment = appointment;
         this.calendar_id = calendar_id;
         this.timeZone = TimeZone.getDefault();
@@ -57,15 +60,15 @@ public class CalendarEntity {
     }
 
     public String getTitle() throws ServiceLocalException {
-        return appointment.getSubject();
+        return subject;
     }
 
     public void setTitle(String title) throws Exception {
-        appointment.setSubject(title);
+        this.subject = title;
     }
 
-    public boolean getAllDay() throws ServiceLocalException {
-        return appointment.getIsAllDayEvent();
+    public boolean getAllDay(){
+        return allday;//appointment.getIsAllDayEvent();
     }
 
     private Date allDayDate(Date in) throws ServiceLocalException {
@@ -102,19 +105,19 @@ public class CalendarEntity {
         return allDayDate(appointment.getStart());
     }
 
-    /*public void setDtstart(Time dtstart)
+    public void setStart(Date dt)
     {
-        this.dtstart = dtstart;
-    }*/
+        this.startDate = dt;
+    }
 
     public Date getEnd() throws ServiceLocalException {
         return allDayDate(appointment.getEnd());
     }
 
-    /*public void setDtend(Time dtend)
+    public void setEnd(Date dt)
     {
-        this.dtend = dtend;
-    }*/
+        this.endDate = dt;
+    }
 
     public String getDescription() throws ServiceLocalException {
         return appointment.getBody().toString();
@@ -205,7 +208,7 @@ public class CalendarEntity {
         contents.add(getEventLocation() == null ? "no EventLocation" : getEventLocation());
         //contents.add(getrRule() == null ? "no rRule" : getrRule());
         //contents.add(getReminderTime() == -1 ? "no Reminder" : Integer.toString(getReminderTime()));
-        return CalendarEntity.join("|", contents.toArray());
+        return CalendarEntry.join("|", contents.toArray());
     }
 
     public static String join(final String delimiter, final Object[] objects)
@@ -221,7 +224,7 @@ public class CalendarEntity {
     }
 
     public static ContentValues getContentValuesFromAppointment(long cal_id, Appointment appointment) throws ServiceLocalException {
-        CalendarEntity ce = new CalendarEntity(appointment, cal_id);
+        CalendarEntry ce = new CalendarEntry(appointment, cal_id);
 
         ContentValues values = new ContentValues();
 
@@ -252,8 +255,16 @@ public class CalendarEntity {
         this.timeZone = timeZone;
     }
 
-    /*public static CalendarEntity createFromAppointment(Appointment appointment) {
-        CalendarEntity ce = new CalendarEntity();
+    public void setColor(int color) {
+        this.color = color;
+    }
+
+    public int getColor() {
+        return color;
+    }
+
+    /*public static CalendarEntry createFromAppointment(Appointment appointment) {
+        CalendarEntry ce = new CalendarEntry();
         TimeZone timeZone;
         timeZone = ce.setTimezone(TimeZone.getTimeZone(appointment.getTimeZone()));
 

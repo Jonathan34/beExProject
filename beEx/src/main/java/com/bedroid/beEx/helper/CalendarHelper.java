@@ -1,18 +1,19 @@
 package com.bedroid.beEx.helper;
 
 import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
 import android.util.Log;
 
-import com.bedroid.beEx.entity.CalendarEntity;
+import com.bedroid.beEx.entity.CalendarEntry;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TimeZone;
 
 import microsoft.exchange.webservices.data.Appointment;
@@ -20,8 +21,6 @@ import microsoft.exchange.webservices.data.Attendee;
 import microsoft.exchange.webservices.data.AttendeeCollection;
 import microsoft.exchange.webservices.data.MeetingResponseType;
 import microsoft.exchange.webservices.data.ServiceLocalException;
-
-import static java.lang.Long.*;
 
 public class CalendarHelper {
     private static final String TAG = "CalendarHelper";
@@ -36,13 +35,15 @@ public class CalendarHelper {
             CalendarContract.Calendars.ACCOUNT_NAME,
             CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
             CalendarContract.Calendars.NAME,
-            CalendarContract.Calendars.CALENDAR_COLOR
+            CalendarContract.Calendars.CALENDAR_COLOR,
     };
 
     // The indices for the projection array above.
     private static final int PROJECTION_ID_INDEX = 0;
-    private static final int PROJECTION_DISPLAY_NAME_INDEX = 1;
-    private static final int PROJECTION_COLOR_INDEX = 2;
+    private static final int PROJECTION_ACCOUNT_NAME_INDEX = 1;
+    private static final int PROJECTION_DISPLAY_NAME_INDEX = 2;
+    private static final int PROJECTION_NAME_INDEX = 3;
+    private static final int PROJECTION_COLOR_INDEX = 4;
 
 
     public static String addCalendar(Account account, ContentResolver cr) {
@@ -84,7 +85,7 @@ public class CalendarHelper {
     public static String addCalendarEntry(ContentResolver cr, long cal_id, Appointment appointment
     /*, long event_id, long start, long end, String title, String descr, boolean isAllDay*/) throws ServiceLocalException {
         // Insert Event
-        ContentValues values = CalendarEntity.getContentValuesFromAppointment(cal_id, appointment);
+        ContentValues values = CalendarEntry.getContentValuesFromAppointment(cal_id, appointment);
 
         //values.put(CalendarContract.Events.SYNC_DATA1, appointment.getId().getUniqueId());
         Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
@@ -215,5 +216,86 @@ public class CalendarHelper {
                 return id;
         }
         return -1;
+    }
+
+    public static List<CalendarEntry> loadFromLocalCalendar(Context context, Account account) {
+        List<CalendarEntry> result = new ArrayList<CalendarEntry>();
+
+        ContentResolver cr = context.getContentResolver();
+        Cursor c = cr.query(CalendarContract.Events.CONTENT_URI, null, null, null, null);
+        while (c.moveToNext()) {
+            CalendarEntry ce = new CalendarEntry();
+            ce.setId(c.getLong(c.getColumnIndex(CalendarContract.Events._ID)));
+            ce.setColor(c.getInt(c.getColumnIndex(CalendarContract.Events.CALENDAR_COLOR)));
+            ce.setTimeZone(TimeZone.getTimeZone(c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_TIMEZONE))));
+            ce.setStart
+                    //TODO
+
+            ce.setc.getString(c.getColumnIndex(CalendarContract.Events.DTSTART));
+            c.getString(c.getColumnIndex(CalendarContract.Events.DTEND));
+            c.getString(c.getColumnIndex(CalendarContract.Events.DURATION));
+            c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_LOCATION));
+            c.getString(c.getColumnIndex(CalendarContract.Events.ALL_DAY));
+            c.getString(c.getColumnIndex(CalendarContract.Events.AVAILABILITY));
+            c.getString(c.getColumnIndex(CalendarContract.Events.DESCRIPTION));
+            c.getString(c.getColumnIndex(CalendarContract.Events.STATUS));
+            //result.add(CalendarContract.Calendars.NAME, );
+			//result.add(CalendarContract.Calendars.ACCOUNT_NAME, c.getString(c.getColumnIndex(CalendarContract.Calendars.ACCOUNT_NAME)));
+			//result.add(CalendarContract.Calendars.ACCOUNT_TYPE, c.getString(c.getColumnIndex(CalendarContract.Calendars.ACCOUNT_TYPE)));
+			
+			//result.add(CalendarContract.Calendars.NAME, c.getString(c.getColumnIndex(CalendarContract.Calendars.NAME)));
+			//result.add(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, c.getString(c.getColumnIndex(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)));
+
+			//result.add(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, ""+c.getInt(c.getColumnIndex(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL)));
+			//result.add(CalendarContract.Calendars.OWNER_ACCOUNT, c.getString(c.getColumnIndex(CalendarContract.Calendars.OWNER_ACCOUNT)));
+			//result.add(CalendarContract.Calendars.VISIBLE, ""+c.getInt(c.getColumnIndex(CalendarContract.Calendars.VISIBLE)));
+			//result.add(CalendarContract.Calendars.SYNC_EVENTS, ""+c.getInt(c.getColumnIndex(CalendarContract.Calendars.SYNC_EVENTS)));
+
+			//result.add(CalendarContract.Calendars._SYNC_ID, c.getString(c.getColumnIndex(CalendarContract.Calendars._SYNC_ID)));
+
+			//result.add(CalendarContract.Calendars.DIRTY, ""+c.getLong(c.getColumnIndex(CalendarContract.Calendars.DIRTY)));
+			//result.add(CalendarContract.Calendars.DELETED, ""+c.getInt(c.getColumnIndex(CalendarContract.Calendars.DELETED)));
+			//result.add(CalendarContract.Calendars.MAX_REMINDERS, ""+c.getInt(c.getColumnIndex(CalendarContract.Calendars.MAX_REMINDERS)));
+			
+			//result.add(CalendarContract.Calendars.ALLOWED_REMINDERS, c.getString(c.getColumnIndex(CalendarContract.Calendars.ALLOWED_REMINDERS)));
+			//result.add(CalendarContract.Calendars.ALLOWED_AVAILABILITY, c.getString(c.getColumnIndex(CalendarContract.Calendars.ALLOWED_AVAILABILITY)));
+			//result.add(CalendarContract.Calendars.ALLOWED_ATTENDEE_TYPES, c.getString(c.getColumnIndex(CalendarContract.Calendars.ALLOWED_ATTENDEE_TYPES)));
+			
+			//result.add(CalendarContract.Calendars.CAN_MODIFY_TIME_ZONE, ""+c.getInt(c.getColumnIndex(CalendarContract.Calendars.CAN_MODIFY_TIME_ZONE)));
+			//result.add(CalendarContract.Calendars.CAN_ORGANIZER_RESPOND, ""+c.getInt(c.getColumnIndex(CalendarContract.Calendars.CAN_ORGANIZER_RESPOND)));
+			//result.add(CalendarContract.Calendars.CAN_PARTIALLY_UPDATE, ""+c.getInt(c.getColumnIndex(CalendarContract.Calendars.CAN_PARTIALLY_UPDATE)));
+			
+			//result.add(CalendarContract.Calendars.CALENDAR_LOCATION, c.getString(c.getColumnIndex(CalendarContract.Calendars.CALENDAR_LOCATION)));
+
+			/*list.put(Calendars.CAL_SYNC1, c.getString(c.getColumnIndex(Calendars.CAL_SYNC1)));
+			list.put(Calendars.CAL_SYNC2, c.getString(c.getColumnIndex(Calendars.CAL_SYNC2)));
+			list.put(Calendars.CAL_SYNC3,c.getString(c.getColumnIndex(Calendars.CAL_SYNC3)));
+			list.put(Calendars.CAL_SYNC4,c.getString(c.getColumnIndex(Calendars.CAL_SYNC4)));
+			list.put(Calendars.CAL_SYNC5,c.getString(c.getColumnIndex(Calendars.CAL_SYNC5)));
+			list.put(Calendars.CAL_SYNC6,c.getString(c.getColumnIndex(Calendars.CAL_SYNC6)));
+			list.put(Calendars.CAL_SYNC7,c.getString(c.getColumnIndex(Calendars.CAL_SYNC7)));
+			list.put(Calendars.CAL_SYNC8,c.getString(c.getColumnIndex(Calendars.CAL_SYNC8)));
+			list.put(Calendars.CAL_SYNC9,c.getString(c.getColumnIndex(Calendars.CAL_SYNC9)));
+			list.put(Calendars.CAL_SYNC10,c.getString(c.getColumnIndex(Calendars.CAL_SYNC10)));*/
+
+            /*StringBuilder sb = new StringBuilder("--CALENDAR DUMP--");
+			for (Entry<String, String> s: list.entrySet()) {
+				sb.append("("+s.getKey()+"|"+s.getValue()+")");
+			}
+			sb.append("----------");
+			Log.i(C.TAG, sb.toString());
+			list.clear();*/
+        }
+
+        return result;
+    }
+
+
+    public static List<CalendarEntry> loadFromRemoteCalendar(Context context) {
+        List<CalendarEntry> result = new ArrayList<CalendarEntry>();
+
+        //TODO
+
+        return result;
     }
 }
