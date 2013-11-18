@@ -92,13 +92,19 @@ public class CalendarHelper {
 
     public static String addCalendarEntry(Context context, Account account, /*long cal_id,*/ CalendarEntry c) throws ServiceLocalException {
         // Insert Event
+        String cal_id = CalendarHelper.getCalendarId(context, account);
+        if(cal_id == null) {
+            Log.e(TAG, "Error jersdf");
+            return null;
+        }
+        c.setCalendarId(Long.parseLong(cal_id));
         ContentValues values = CalendarEntry.getContentValues(c);
         ContentResolver cr = context.getContentResolver();
 
         //values.put(CalendarContract.Events.SYNC_DATA1, appointment.getId().getUniqueId());
         //Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
 
-        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Events.CONTENT_URI, account, "com.bedroid.beEx.account" /*CalendarContract.ACCOUNT_TYPE_LOCAL*/);
+        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Events.CONTENT_URI, account, /*"com.bedroid.beEx.account"*/ CalendarContract.ACCOUNT_TYPE_LOCAL);
         Uri uri = cr.insert(syncUri, values);
 
         /*****
@@ -159,11 +165,20 @@ public class CalendarHelper {
         return CalendarContract.Attendees.ATTENDEE_STATUS_NONE;
     }
 
-    public static void clearCalendarEntries(Context context, Account account) {
+    private static String getCalendarId(Context context, Account account) {
         AccountManager am = AccountManager.get(context);
         String cal_id = am.getUserData(account, "CALENDAR_ID");
         if(cal_id == null) {
             Log.e(TAG, "The calendar ID associated with the account is invalid");
+            return null;
+        }
+        return cal_id;
+    }
+
+    public static void clearCalendarEntries(Context context, Account account) {
+        String cal_id = CalendarHelper.getCalendarId(context, account);
+        if(cal_id == null) {
+          Log.e(TAG, "Error jersdf");
             return;
         }
 
