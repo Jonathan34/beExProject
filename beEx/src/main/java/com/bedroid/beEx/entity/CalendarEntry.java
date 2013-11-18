@@ -7,71 +7,51 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import android.content.ContentValues;
+import android.net.Uri;
 import android.provider.CalendarContract;
 
 import microsoft.exchange.webservices.data.Appointment;
+import microsoft.exchange.webservices.data.EmailAddress;
 import microsoft.exchange.webservices.data.ServiceLocalException;
 
-/**
- * Created by Jon on 11/14/13.
- */
 public class CalendarEntry {
 
-    private Appointment appointment;
+    //add field to equals
+    //add field to loadFrom...()
+    //add field to getContentValues...()
     private String subject;
+
+    private Date startDate;
+    private Date endDate;
     private boolean allday;
+    private TimeZone timeZone;
+    private String duration;
 
     private long calendar_id;
-
-    private TimeZone timeZone;
     private int color;
 
-    public CalendarEntry(Appointment appointment, long calendar_id) {
-        this.appointment = appointment;
-        this.calendar_id = calendar_id;
-        this.timeZone = TimeZone.getDefault();
-    }
+    private String location;
+    private String description;
+    private String status;
+    private String uid;
+    private People organizer;
+    private Date lastModificationTime;
 
-    public String getId() throws ServiceLocalException {
-        return appointment.getId().getUniqueId();
-    }
+    public String getUid()  { return this.uid; }
 
-    public void setId(long id)
-    {
-        //appointment.setCa = id;
-    }
+    public void setUid(String uid) { this.uid = uid; }
 
-    public String getUid() throws ServiceLocalException {
-        return appointment.getICalUid();
-    }
+    public long getCalendarId() { return calendar_id; }
 
-    public void setUid(String uid) throws Exception {
-        appointment.setICalUid(uid);
-    }
+    public void setCalendarId(long calendarId) { this.calendar_id = calendarId; }
 
-    public long getCalendar_id()
-    {
-        return calendar_id;
-    }
+    public String getTitle() { return subject; }
 
-    public void setCalendar_id(int calendarId)
-    {
-        calendar_id = calendarId;
-    }
+    public void setTitle(String title) { this.subject = title; }
 
-    public String getTitle() throws ServiceLocalException {
-        return subject;
-    }
+    public boolean getAllDay(){ return allday; }
 
-    public void setTitle(String title) throws Exception {
-        this.subject = title;
-    }
-
-    public boolean getAllDay(){
-        return allday;//appointment.getIsAllDayEvent();
-    }
-
-    private Date allDayDate(Date in) throws ServiceLocalException {
+    private Date allDayDate(Date in) {
         if(in != null) {
             if(this.getAllDay()) {
                 Calendar calender = Calendar.getInstance();
@@ -89,116 +69,96 @@ public class CalendarEntry {
         return null;
     }
 
-    public void setAllDay(boolean allDay) throws Exception {
-        appointment.setIsAllDayEvent(allDay);
-        if(allDay) {
-            appointment.setStart(allDayDate(appointment.getStart()));
-            appointment.setEnd(allDayDate(appointment.getEnd()));
+    public void setAllDay(boolean allDay) {
+        this.allday = allDay;
+        if(this.allday) {
+            this.setStart(allDayDate(this.getStart()));
+            this.setEnd(allDayDate(this.getEnd()));
         }
     }
 
-    public String getWhen() throws ServiceLocalException {
-        return appointment.getWhen();
+    /*public String getWhen() { return appointment.getWhen(); }*/
+
+    public Date getStart() { return this.startDate; }
+
+    public void setStart(Date dt) { this.startDate = dt; }
+
+    public Date getEnd()  { return this.endDate; }
+
+    public void setEnd(Date dt) { this.endDate = dt; }
+
+    public String getDescription() { return this.description; }
+
+    public void setDescription(String description) { this.description = description;}
+
+    public String getEventLocation() { return this.location; }
+
+    public TimeZone getTimeZone() {
+        return this.timeZone;
     }
 
-    public Date getStart() throws ServiceLocalException {
-        return allDayDate(appointment.getStart());
+    public void setTimeZone(TimeZone timeZone) {
+        this.timeZone = timeZone;
     }
 
-    public void setStart(Date dt)
-    {
-        this.startDate = dt;
+    public void setColor(int color) {
+        this.color = color;
     }
 
-    public Date getEnd() throws ServiceLocalException {
-        return allDayDate(appointment.getEnd());
+    public int getColor() {
+        return this.color;
     }
 
-    public void setEnd(Date dt)
-    {
-        this.endDate = dt;
-    }
+    public void setDuration(String duration) { this.duration = duration; }
 
-    public String getDescription() throws ServiceLocalException {
-        return appointment.getBody().toString();
-    }
+    public String getDuration() { return duration; }
 
-    /*public void setDescription(String description)
-    {
-        this.description = description;
-    }*/
+    public void setLocation(String location) { this.location = location; }
 
-    public String getEventLocation() throws ServiceLocalException {
-        return appointment.getLocation();
-    }
+    public String getLocation() { return location; }
 
-    /*public void setEventLocation(String eventLocation)
-    {
-        this.eventLocation = eventLocation;
-    }*/
+    public void setStatus(String status) { this.status = status; }
 
-    /*public int getVisibility()
-    {
-        return appointment.getVis;
-    }
-
-    public void setVisibility(int visibility)
-    {
-        this.visibility = visibility;
-    }*/
-
-    /*public int getHasAlarm()
-    {
-        return hasAlarm;
-    }
-
-    public void setHasAlarm(int hasAlarm)
-    {
-        this.hasAlarm = hasAlarm;
-    }*/
-
-    /*public String getrRule()
-    {
-        return rRule;
-    }
-
-    public void setrRule(String rRule)
-    {
-        this.rRule = rRule;
-    }*/
-
-    /*public String getexDate()
-    {
-        return exDate;
-    }
-
-    public void setexDate(String exDate)
-    {
-        this.exDate = exDate;
-    }
-
-    public int getReminderTime()
-    {
-        return reminderTime;
-    }
-
-    public void setReminderTime(int reminderTime)
-    {
-        this.reminderTime = reminderTime;
-    }*/
+    public String getStatus() { return status; }
 
     @Override
-    public String toString()
-    {
-        try {
-            return getTitle() + ": " + getStart().toString();
-        } catch (ServiceLocalException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public String toString() { return getTitle() + " by " + getOrganizer().getName() + ": " + getStart().toString(); }
+
+    @Override
+    public boolean equals(Object aThat) {
+        //check for self-comparison
+        if ( this == aThat ) return true;
+
+        //use instanceof instead of getClass here for two reasons
+        //1. if need be, it can match any supertype, and not just one class;
+        //2. it renders an explict check for "that == null" redundant, since
+        //it does the check for null already - "null instanceof [type]" always
+        //returns false. (See Effective Java by Joshua Bloch.)
+        if ( !(aThat instanceof CalendarEntry) ) return false;
+        //Alternative to the above line :
+        //if ( aThat == null || aThat.getClass() != this.getClass() ) return false;
+
+        //cast to native object is now safe
+        CalendarEntry that = (CalendarEntry)aThat;
+
+        //now a proper field-by-field evaluation can be made
+        return this.getTitle() == that.getTitle()
+                && this.getStart() == that.getStart()
+                && this.getEnd() == that.getEnd()
+                && this.getAllDay() == that.getAllDay()
+                && this.getColor() == that.getColor()
+                && this.getEventLocation() == that.getEventLocation()
+                && this.getKey() == that.getKey()
+                && this.getLocation() == that.getLocation()
+                && this.getStatus() == that.getStatus()
+                && this.getDescription() == that.getDescription()
+                && this.getTimeZone() == that.getTimeZone()
+                && this.getDuration() == that.getDuration()
+                && this.getCalendarId() == that.getCalendarId()
+                && this.getLastModificationTime() == that.getLastModificationTime();
     }
 
-    public String getLocalHash() throws ServiceLocalException {
+    public String getLocalHash() {
         ArrayList<String> contents = new ArrayList<String>(4);
         contents.add(getTitle() == null ? "no title" : getTitle());
         contents.add(getStart() == null ? "no start" : "start " + getStart().getTime());
@@ -223,12 +183,10 @@ public class CalendarEntry {
         return buffer.toString();
     }
 
-    public static ContentValues getContentValuesFromAppointment(long cal_id, Appointment appointment) throws ServiceLocalException {
-        CalendarEntry ce = new CalendarEntry(appointment, cal_id);
-
+    public static ContentValues getContentValues(CalendarEntry ce) {
         ContentValues values = new ContentValues();
 
-        String when = ce.getWhen();
+        //String when = ce.getWhen();
         Date start = ce.getStart();
         Date end = ce.getEnd();
 
@@ -236,31 +194,56 @@ public class CalendarEntry {
         values.put(CalendarContract.Events.DTEND, end.getTime());
         values.put(CalendarContract.Events.EVENT_TIMEZONE, ce.getTimeZone().getID());
         values.put(CalendarContract.Events.TITLE, ce.getTitle());
-        values.put(CalendarContract.Events.DESCRIPTION, "descr");
-        values.put(CalendarContract.Events.ORGANIZER, appointment.getOrganizer().getAddress());
-        values.put(CalendarContract.Events.SELF_ATTENDEE_STATUS, appointment.getMyResponseType().ordinal());
-        values.put(CalendarContract.Events.DESCRIPTION, "descr");
+        values.put(CalendarContract.Events.DESCRIPTION, ce.getDescription());
+        //values.put(CalendarContract.Events.CALENDAR_COLOR, ce.getColor());
+        //TODO values.put(CalendarContract.Events.ORGANIZER, ce.getOrganizer().getAddress());
+        //TODO values.put(CalendarContract.Events.SELF_ATTENDEE_STATUS, ce.getMyResponseType().ordinal());
 
-        values.put(CalendarContract.Events.CALENDAR_ID, cal_id);
+        values.put(CalendarContract.Events.CALENDAR_ID, ce.getCalendarId());
         values.put(CalendarContract.Events.ALL_DAY, ce.getAllDay() ? 1 : 0);
+        //values.put(CalendarContract.Events.LAST_DATE, )
 
         return values;
     }
 
-    public TimeZone getTimeZone() {
-        return timeZone;
+    public boolean loadFromAppointment(Appointment a) throws Exception {
+        if (a == null)
+            return false;
+
+        this.setTimeZone(TimeZone.getTimeZone(a.getTimeZone()));
+        this.setTitle(a.getSubject());
+        //String when = appointment.getWhen();
+        this.setStart(a.getStart());
+        this.setEnd(a.getEnd());
+        this.setDescription("descr");//TODO
+        this.setOrganizer(new People(a.getOrganizer().getName(), a.getOrganizer().getAddress()));
+        //TODO set attendeeds
+        //this.setCalendarId(cal_id);
+        this.setAllDay(a.getIsAllDayEvent());
+        this.setUid(a.getId().getUniqueId());
+        this.setLastModificationTime(a.getLastModifiedTime());
+
+        return true;
     }
 
-    public void setTimeZone(TimeZone timeZone) {
-        this.timeZone = timeZone;
+    public void setOrganizer(People organizer) {
+        this.organizer = organizer;
     }
 
-    public void setColor(int color) {
-        this.color = color;
+    public People getOrganizer() {
+        return organizer;
     }
 
-    public int getColor() {
-        return color;
+    public String getKey() {
+        return getOrganizer().getEmail() + " :: " +  getTitle() + getStart().toString();
+    }
+
+    public void setLastModificationTime(Date lastModificationTime) {
+        this.lastModificationTime = lastModificationTime;
+    }
+
+    public Date getLastModificationTime() {
+        return lastModificationTime;
     }
 
     /*public static CalendarEntry createFromAppointment(Appointment appointment) {

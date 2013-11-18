@@ -19,7 +19,14 @@ import com.bedroid.beEx.helper.ExchangeHelper;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import microsoft.exchange.webservices.data.Appointment;
 import microsoft.exchange.webservices.data.ExchangeService;
@@ -46,47 +53,99 @@ import microsoft.exchange.webservices.data.FindItemsResults;
             try {
                 ///*new */CalendarSyncAdapterService/*()*/.performSync(mContext, account, extras, authority, provider, syncResult);
                 //mContentResolver = context.getContentResolver();
-                Log.i(TAG, "performSync: " + account.toString());
+                Calendar cal = Calendar.getInstance();
+
+                Log.i(TAG, "performSync: " + account.toString() + " at " + cal.getTime().toString());
                 //This is where the magic will happen!
-                //TODO
+
+                //Connect to exchange
                 ExchangeHelper eh = ExchangeHelper.getInstance();
                 ExchangeService service = eh.connectToExchange(mContext);
+                //System.out.println("Check if exist");
 
-                // 1.a Retrieve local items
-                List<CalendarEntry> localItems = CalendarHelper.loadFromLocalCalendar(mContext, account);
-
-                // 1.b Retrieve remote items
-                List<CalendarEntry> remoteItems = CalendarHelper.loadFromRemoteCalendar(mContext);
-                System.out.println("Check if exist");
-            /*long id = CalendarHelper.fetchCalendars(account, context.getContentResolver());
-            if(id == -1) {
-                System.out.println("Adding...");
-                CalendarHelper.addCalendar(account, context.getContentResolver());
-            }*/
-
-            /*
-            System.out.println("Deleting");
-            for(int i=0;i<10;i++)
-                CalendarHelper.deleteCalendar(i, account, context.getContentResolver());
-            */
-
-            /*System.out.println("After add");
-            id = CalendarHelper.fetchCalendars(account, context.getContentResolver());
-            if(id == -1) {
-                System.out.println("Does not exist... returning");
-                return;
-            }*/
-                AccountManager am = AccountManager.get(mContext);
+                /*AccountManager am = AccountManager.get(mContext);
                 String id = am.getUserData(account, "CALENDAR_ID");
                 if(id == null) {
                     Log.e(TAG, "The calendar ID associated with the account is invalid");
                     return;
+                }*/
+
+                // 1.a Retrieve local items
+                HashMap<String, CalendarEntry> localItems = CalendarHelper.loadFromLocalCalendar(mContext, account);
+
+                // 1.b Retrieve remote items
+                HashMap<String, CalendarEntry> remoteItems = CalendarHelper.loadFromRemoteCalendar(mContext, service);
+
+                //1.c debug
+                StringBuilder sb = new StringBuilder("--CALENDAR LOCAL DUMP--");
+                for (Map.Entry<String, CalendarEntry> s: localItems.entrySet()) {
+                    sb.append("("+s.getKey()+"|"+s.getValue()+")");
+                }
+                sb.append("----------");
+                Log.i(TAG, sb.toString());
+
+                sb = new StringBuilder("--CALENDAR REMOTE  DUMP--");
+                for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
+                    sb.append("("+s.getKey()+"|"+s.getValue()+")");
+                }
+                sb.append("----------");
+                Log.i(TAG, sb.toString());
+
+                Set<String> processedEntries = new HashSet<String>();
+
+                //TODO Remove -- clears up everything we have
+                CalendarHelper.clearCalendarEntries(mContext, account);
+
+                for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
+                    String rkey = s.getKey();
+                    CalendarEntry rval = s.getValue();
+
+                    if(rkey == null || rkey.isEmpty()) {
+                        Log.e(TAG, "Incorrect entry found");
+                        continue;
+                    }
+
+                    //have we already see this entry?
+                    if(processedEntries.contains(rkey)) {
+                        Log.w(TAG, "Already processed from server: skipping " + rkey);
+                        continue;
+                    }
+
+                    //check if we have this entry locally and update it
+                    if(localItems.containsKey(rkey)) {
+                        //TODO update
+                        Log.i(TAG, "Updating entry " + rkey);
+                        //TODO check for local changes
+                        CalendarEntry lval = localItems.get(rkey);
+                        if(lval.equals(rval)) {
+                            //TODO nothing to do
+                            Log.i(TAG, "\t Entry is identical... nothing to do" + rkey);
+                        }
+                        else {
+                            //TODO changes found, upload
+                            //if(lval.last)
+                        }
+
+
+                        //TODO no change found, nothing to do
+                        //TODO check for remote changes
+                    }
+                    else {
+                        //TODO Add remote entry on local side
+                        /*if(processedEntries.contains(rkey)) {
+                            Log.w(TAG, "Already processed from server: skipping " + rkey);
+                        }*/
+                        Log.i(TAG, "Adding entry " + rkey);
+                        CalendarHelper.addCalendarEntry(mContext, account, rval);
+                    }
+
+                    //flag entry as processed
+                   //todo flag correctly processed entries (what if the entry is not updated or added? it is probably deleted?
+                   processedEntries.add(rkey);
+
                 }
 
-                //clears up everything we have
-                CalendarHelper.clearCalendarEntries(mContext.getContentResolver(), account, id);
-
-                FindItemsResults<Appointment> appointments = eh.getCalendarItems();
+                /*FindItemsResults<Appointment> appointments = eh.getCalendarItems();
                 for (Appointment appointment : appointments.getItems())
                 {
                     if(appointment == null) {
@@ -96,13 +155,10 @@ import microsoft.exchange.webservices.data.FindItemsResults;
 
                     //CalendarEntry.createFromAppointment(appointment);
                     //Test if appointment already exists
-                    /*String when = appointment.getWhen();
-                    Date start = appointment.getStart();
-                    Date end = appointment.getEnd();*/
                     Appointment a = Appointment.bind(service, appointment.getId());
                     String ei = CalendarHelper.addCalendarEntry(mContext.getContentResolver(), Long.parseLong(id), a);
                     Log.i(TAG, "Calendar entry created " + ei);
-                }
+                }*/
 
             } catch (OperationCanceledException e) {
                 e.printStackTrace();
@@ -132,3 +188,21 @@ import microsoft.exchange.webservices.data.FindItemsResults;
             throws OperationCanceledException {
     }
 }
+      /*long id = CalendarHelper.fetchCalendars(account, context.getContentResolver());
+            if(id == -1) {
+                System.out.println("Adding...");
+                CalendarHelper.addCalendar(account, context.getContentResolver());
+            }*/
+
+            /*
+            System.out.println("Deleting");
+            for(int i=0;i<10;i++)
+                CalendarHelper.deleteCalendar(i, account, context.getContentResolver());
+            */
+
+            /*System.out.println("After add");
+            id = CalendarHelper.fetchCalendars(account, context.getContentResolver());
+            if(id == -1) {
+                System.out.println("Does not exist... returning");
+                return;
+            }*/
