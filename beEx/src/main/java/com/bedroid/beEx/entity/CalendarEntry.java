@@ -192,6 +192,7 @@ public class CalendarEntry {
 
         values.put(CalendarContract.Events.DTSTART, ce.getAllDay() ? end.getTime() :start.getTime());
         values.put(CalendarContract.Events.DTEND, end.getTime());
+        String tz = ce.getTimeZone().getID();
         values.put(CalendarContract.Events.EVENT_TIMEZONE, ce.getTimeZone().getID());
         values.put(CalendarContract.Events.TITLE, ce.getTitle());
         values.put(CalendarContract.Events.DESCRIPTION, ce.getDescription());
