@@ -74,14 +74,14 @@ public class CalendarSyncAdapterService extends Service {
                 //1.c debug
                 StringBuilder sb = new StringBuilder("--CALENDAR LOCAL DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: localItems.entrySet()) {
-                    sb.append("("+s.getKey()+"|"+s.getValue()+")");
+                    sb.append("("+s.getKey() /*+"|"+s.getValue()*/+")");
                 }
                 sb.append("----------");
                 Log.i(TAG, sb.toString());
 
                 sb = new StringBuilder("--CALENDAR REMOTE DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
-                    sb.append("("+s.getKey()+"|"+s.getValue()+")");
+                    sb.append("("+s.getKey()/*+"|"+s.getValue()*/+")");
                 }
                 sb.append("----------");
                 Log.i(TAG, sb.toString());
@@ -119,16 +119,21 @@ public class CalendarSyncAdapterService extends Service {
                             //TODO changes found, upload
                             Log.i(TAG, "\t Entry is NOT identical... updating" + rkey);
                             Calendar ldate = Calendar.getInstance();
-                            ldate.setTime(lval.getLastModificationTime());
+                            if(lval.getLastModificationTime() != null && rval.getLastModificationTime() != null) {
+                                ldate.setTime(lval.getLastModificationTime());
 
-                            Calendar rdate = Calendar.getInstance();
-                            rdate.setTime(rval.getLastModificationTime());
+                                Calendar rdate = Calendar.getInstance();
+                                rdate.setTime(rval.getLastModificationTime());
 
-                            if(ldate.before(rdate)) {
-                                Log.i(TAG, "\t updating local " + rkey);
+                                if(ldate.before(rdate)) {
+                                    Log.i(TAG, "\t updating local " + rkey);
+                                }
+                                else {
+                                    Log.i(TAG, "\t updating remote " + rkey);
+                                }
                             }
                             else {
-                                Log.i(TAG, "\t updating remote " + rkey);
+                                Log.e(TAG, "\t cannot update, no last modification date set" + rkey);
                             }
 
                         }

@@ -241,11 +241,11 @@ public class CalendarEntry {
     }
 
     public People getOrganizer() {
-        return organizer;
+        return this.organizer;
     }
 
     public String getKey() {
-        return getOrganizer().getEmail() + " :: " +  getTitle() + getStart().toString();
+        return getOrganizer().getEmail() + " :: " +  getTitle() + " at " +  getStart().toString();
     }
 
     public void setLastModificationTime(Date lastModificationTime) {

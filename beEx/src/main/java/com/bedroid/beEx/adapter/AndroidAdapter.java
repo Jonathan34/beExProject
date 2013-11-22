@@ -10,6 +10,7 @@ import com.bedroid.beEx.entity.CalendarEntry;
 import com.bedroid.beEx.entity.People;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.TimeZone;
 
@@ -41,11 +42,13 @@ public class AndroidAdapter extends GenericAdapter {
             ce.setTimeZone(TimeZone.getTimeZone(c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_TIMEZONE))));
 
             Calendar cal = Calendar.getInstance();
-            cal.setTimeInMillis(c.getInt(c.getColumnIndex(CalendarContract.Events.DTSTART)));
+            cal.setTimeInMillis(Long.parseLong(c.getString(c.getColumnIndex(CalendarContract.Events.DTSTART))));
             ce.setStart(cal.getTime());
+            //Works: ce.setStart(new Date(Long.parseLong(c.getString(c.getColumnIndex(CalendarContract.Events.DTSTART)))));
 
-            cal.setTimeInMillis(c.getInt(c.getColumnIndex(CalendarContract.Events.DTEND)));
+            cal.setTimeInMillis(Long.parseLong(c.getString(c.getColumnIndex(CalendarContract.Events.DTEND))));
             ce.setEnd(cal.getTime());
+            //Works: ce.setEnd(new Date(Long.parseLong(c.getString(c.getColumnIndex(CalendarContract.Events.DTSTART)))));
 
             ce.setDuration(c.getString(c.getColumnIndex(CalendarContract.Events.DURATION)));
             ce.setLocation(c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_LOCATION)));
@@ -55,8 +58,8 @@ public class AndroidAdapter extends GenericAdapter {
             ce.setTitle(c.getString(c.getColumnIndex(CalendarContract.Events.TITLE)));
             ce.setStatus(c.getString(c.getColumnIndex(CalendarContract.Events.STATUS)));
 
-            String organizer = c.getString(c.getColumnIndex(CalendarContract.Events.ORGANIZER));
-            String adressOrganizer = "";
+            String organizer = "";
+            String adressOrganizer = c.getString(c.getColumnIndex(CalendarContract.Events.ORGANIZER));
             ce.setOrganizer(new People(organizer, adressOrganizer));
 
             result.put(ce.getKey(), ce);
