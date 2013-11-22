@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.bedroid.beEx.adapter.ExchangeAdapter;
+import com.bedroid.beEx.adapter.IAdapter;
 import com.bedroid.beEx.entity.CalendarEntry;
 import com.bedroid.beEx.helper.CalendarHelper;
 import com.bedroid.beEx.helper.ExchangeHelper;
@@ -21,6 +23,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,8 +35,9 @@ import microsoft.exchange.webservices.data.Appointment;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.FindItemsResults;
 
-    public class CalendarSyncAdapterService extends Service {
-        private static final String TAG = "CalendarSyncAdapterService";
+public class CalendarSyncAdapterService extends Service {
+
+    private static final String TAG = "CalendarSyncAdapterService";
     private static SyncAdapterImpl sSyncAdapter = null;
 
     public CalendarSyncAdapterService() {
@@ -52,29 +56,20 @@ import microsoft.exchange.webservices.data.FindItemsResults;
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
             try {
                 ///*new */CalendarSyncAdapterService/*()*/.performSync(mContext, account, extras, authority, provider, syncResult);
-                //mContentResolver = context.getContentResolver();
+
                 Calendar cal = Calendar.getInstance();
-
                 Log.i(TAG, "performSync: " + account.toString() + " at " + cal.getTime().toString());
-                //This is where the magic will happen!
 
-                //Connect to exchange
-                ExchangeHelper eh = ExchangeHelper.getInstance();
-                ExchangeService service = eh.connectToExchange(mContext);
-                //System.out.println("Check if exist");
-
-                /*AccountManager am = AccountManager.get(mContext);
-                String id = am.getUserData(account, "CALENDAR_ID");
-                if(id == null) {
-                    Log.e(TAG, "The calendar ID associated with the account is invalid");
-                    return;
-                }*/
+                IAdapter remoteAdapter = CalendarHelper.getCalendarAdapter(mContext, account);
+                IAdapter localAdapter = CalendarHelper.getAndroidCalendarAdapter(mContext, account);
 
                 // 1.a Retrieve local items
-                HashMap<String, CalendarEntry> localItems = CalendarHelper.loadFromLocalCalendar(mContext, account);
+                //HashMap<String, CalendarEntry> localItems = CalendarHelper.loadFromLocalCalendar(mContext, account);
+                HashMap<String, CalendarEntry> localItems = localAdapter.getAppointments();
 
                 // 1.b Retrieve remote items
-                HashMap<String, CalendarEntry> remoteItems = CalendarHelper.loadFromRemoteCalendar(mContext, service);
+                //HashMap<String, CalendarEntry> remoteItems = CalendarHelper.loadFromRemoteCalendar(mContext, service);
+                HashMap<String, CalendarEntry> remoteItems = remoteAdapter.getAppointments();
 
                 //1.c debug
                 StringBuilder sb = new StringBuilder("--CALENDAR LOCAL DUMP--");
@@ -84,7 +79,7 @@ import microsoft.exchange.webservices.data.FindItemsResults;
                 sb.append("----------");
                 Log.i(TAG, sb.toString());
 
-                sb = new StringBuilder("--CALENDAR REMOTE  DUMP--");
+                sb = new StringBuilder("--CALENDAR REMOTE DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
                     sb.append("("+s.getKey()+"|"+s.getValue()+")");
                 }
@@ -118,14 +113,25 @@ import microsoft.exchange.webservices.data.FindItemsResults;
                         //TODO check for local changes
                         CalendarEntry lval = localItems.get(rkey);
                         if(lval.equals(rval)) {
-                            //TODO nothing to do
                             Log.i(TAG, "\t Entry is identical... nothing to do" + rkey);
                         }
                         else {
                             //TODO changes found, upload
-                            //if(lval.last)
-                        }
+                            Log.i(TAG, "\t Entry is NOT identical... updating" + rkey);
+                            Calendar ldate = Calendar.getInstance();
+                            ldate.setTime(lval.getLastModificationTime());
 
+                            Calendar rdate = Calendar.getInstance();
+                            rdate.setTime(rval.getLastModificationTime());
+
+                            if(ldate.before(rdate)) {
+                                Log.i(TAG, "\t updating local " + rkey);
+                            }
+                            else {
+                                Log.i(TAG, "\t updating remote " + rkey);
+                            }
+
+                        }
 
                         //TODO no change found, nothing to do
                         //TODO check for remote changes
@@ -135,8 +141,8 @@ import microsoft.exchange.webservices.data.FindItemsResults;
                         /*if(processedEntries.contains(rkey)) {
                             Log.w(TAG, "Already processed from server: skipping " + rkey);
                         }*/
-                        Log.i(TAG, "Adding entry " + rkey);
-                        CalendarHelper.addCalendarEntry(mContext, account, rval);
+                        String id = CalendarHelper.addCalendarEntry(mContext, account, rval);
+                        Log.i(TAG, "Added entry " + id);
                     }
 
                     //flag entry as processed
@@ -160,13 +166,13 @@ import microsoft.exchange.webservices.data.FindItemsResults;
                     Log.i(TAG, "Calendar entry created " + ei);
                 }*/
 
-            } catch (OperationCanceledException e) {
+            }/* catch (OperationCanceledException e) {
                 e.printStackTrace();
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             } catch (ParseException e) {
                 e.printStackTrace();
-            } catch (Exception e) {
+            } */catch (Exception e) {
                 e.printStackTrace();
             }
         }

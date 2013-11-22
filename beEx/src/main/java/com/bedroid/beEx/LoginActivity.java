@@ -320,6 +320,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
             Account[] accounts = am.getAccountsByType("com.bedroid.beEx.account");
             if(accounts != null && accounts.length > 0) {
                 Log.i(TAG, "The account already exists");
+                //TODO handle several accounts
                 return true;
             }
 
@@ -329,6 +330,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 String calId = CalendarHelper.addCalendar(account, getBaseContext().getContentResolver());
                 Log.i(TAG, "Adding calendar " + calId + " with url " + mServerUrl);
                 am.setUserData(account, "CALENDAR_ID", calId);
+                am.setUserData(account, "ADAPTER_TYPE", CalendarHelper.CalendarType.EXCHANGE_CALENDAR.toString());
                 am.setUserData(account, "SERVER_URL", mServerUrl);
             }
 
