@@ -1,21 +1,15 @@
 package com.bedroid.beEx.entity;
 
-
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
 import android.content.ContentValues;
-import android.net.Uri;
 import android.provider.CalendarContract;
 
 import microsoft.exchange.webservices.data.Appointment;
-import microsoft.exchange.webservices.data.BasePropertySet;
-import microsoft.exchange.webservices.data.EmailAddress;
 import microsoft.exchange.webservices.data.MessageBody;
-import microsoft.exchange.webservices.data.PropertySet;
-import microsoft.exchange.webservices.data.ServiceLocalException;
+import microsoft.exchange.webservices.data.TimeSpan;
 
 public class CalendarEntry {
 
@@ -28,7 +22,7 @@ public class CalendarEntry {
     private Date endDate;
     private boolean allday;
     private TimeZone timeZone;
-    private String duration;
+    private TimeSpan duration;
 
     private long calendar_id;
     private int color;
@@ -39,6 +33,9 @@ public class CalendarEntry {
     private String uid;
     private People organizer;
     private Date lastModificationTime;
+
+    private boolean isDirty = false;
+    private boolean deleted;
 
     public String getUid()  { return this.uid; }
 
@@ -110,9 +107,9 @@ public class CalendarEntry {
         return this.color;
     }
 
-    public void setDuration(String duration) { this.duration = duration; }
+    /*public void setDuration(TimeSpan duration) { this.duration = duration; }
 
-    public String getDuration() { return duration; }
+    public TimeSpan getDuration() { return this. duration; }*/
 
     public void setLocation(String location) { this.location = location; }
 
@@ -144,20 +141,20 @@ public class CalendarEntry {
         CalendarEntry that = (CalendarEntry)aThat;
 
         //now a proper field-by-field evaluation can be made
-        return this.getTitle() == that.getTitle()
-                && this.getStart() == that.getStart()
-                && this.getEnd() == that.getEnd()
-                && this.getAllDay() == that.getAllDay()
-                && this.getColor() == that.getColor()
-                && this.getLocation() == that.getLocation()
-                && this.getKey() == that.getKey()
-                && this.getLocation() == that.getLocation()
-                && this.getStatus() == that.getStatus()
-                && this.getDescription() == that.getDescription()
-                && this.getTimeZone() == that.getTimeZone()
-                && this.getDuration() == that.getDuration()
-                && this.getCalendarId() == that.getCalendarId()
-                && this.getLastModificationTime() == that.getLastModificationTime();
+        boolean res = this.getTitle().equals(that.getTitle());
+        res = res && this.getStart().equals(that.getStart());
+        res = res && this.getEnd().equals(that.getEnd());
+        res = res && this.getAllDay() == that.getAllDay();
+                //&& this.getColor() == that.getColor()
+        res = res && this.getLocation().equals(that.getLocation());
+        res = res && this.getKey().equals(that.getKey());
+        res = res && (this.getStatus() == null && that.getStatus() == null ? true : this.getStatus().equals(that.getStatus()));
+        res = res && this.getDescription().equals(that.getDescription());
+        res = res && this.getTimeZone().equals(that.getTimeZone());
+        return res;
+                //&& this.getDuration() == that.getDuration()
+                //&& this.getCalendarId() == that.getCalendarId()
+                //&& this.getLastModificationTime() == that.getLastModificationTime()
     }
 
     /*public String getLocalHash() {
@@ -201,9 +198,30 @@ public class CalendarEntry {
         //values.put(CalendarContract.Events.CALENDAR_COLOR, ce.getColor());
         values.put(CalendarContract.Events.ORGANIZER, ce.getOrganizer().getEmail());
         values.put(CalendarContract.Events.EVENT_LOCATION, ce.getLocation());
-        values.put(CalendarContract.Events.DURATION, ce.getDuration());
+
+        //Compute duration
+        /*Time end = new Time(ce.getEnd());
+        end.parse(dtendProperty.getValue());
+        long durationMillis = end.toMillis(false)
+                - start.toMillis(false );
+        long durationSeconds = (durationMillis / 1000);
+        if (start.allDay && (durationSeconds % 86400) == 0) {
+            return "P" + (durationSeconds / 86400) + "D"; // Server wants this instead of P86400S
+        } else {
+            return "P" + durationSeconds + "S";
+        }*/
+
+        /*SimpleDateFormat.
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(ce.getDuration().getTotalMilliseconds());
+        String duration = android.text.format.DateUtils.getRelativeTimeSpanString(context, ce.getDuration().getTotalMilliseconds());
+
+        values.put(CalendarContract.Events.DURATION, duration);*/
+        //
+
         values.put(CalendarContract.Events.UID_2445, ce.getUid());
         values.put(CalendarContract.Events.STATUS, ce.getStatus());
+        values.put(CalendarContract.Events.LAST_DATE, ce.getStatus());
 
         //TODO values.put(CalendarContract.Events.SELF_ATTENDEE_STATUS, ce.getMyResponseType().ordinal());
 
@@ -230,7 +248,9 @@ public class CalendarEntry {
         this.setAllDay(a.getIsAllDayEvent());
         this.setUid(a.getId().getUniqueId());
         this.setLocation(a.getLocation());
-        this.setDuration(a.getDuration().toString());
+        /*TimeSpan dur = a.getDuration();
+        this.setDuration(dur);//SCRUBBING*/
+
         this.setLastModificationTime(a.getLastModifiedTime());
 
         return true;
@@ -253,7 +273,23 @@ public class CalendarEntry {
     }
 
     public Date getLastModificationTime() {
-        return lastModificationTime;
+        return this.lastModificationTime;
+    }
+
+    public boolean isDirty() {
+        return isDirty;
+    }
+
+    public void setDirty(boolean isDirty) {
+        this.isDirty = isDirty;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
     }
 
     /*public static CalendarEntry createFromAppointment(Appointment appointment) {

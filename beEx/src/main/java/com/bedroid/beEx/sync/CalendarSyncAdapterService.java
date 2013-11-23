@@ -74,14 +74,14 @@ public class CalendarSyncAdapterService extends Service {
                 //1.c debug
                 StringBuilder sb = new StringBuilder("--CALENDAR LOCAL DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: localItems.entrySet()) {
-                    sb.append("("+s.getKey() /*+"|"+s.getValue()*/+")");
+                    sb.append("\n("+s.getKey() /*+"|"+s.getValue()*/+")");
                 }
                 sb.append("----------");
                 Log.i(TAG, sb.toString());
 
                 sb = new StringBuilder("--CALENDAR REMOTE DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
-                    sb.append("("+s.getKey()/*+"|"+s.getValue()*/+")");
+                    sb.append("\n("+s.getKey()/*+"|"+s.getValue()*/+")");
                 }
                 sb.append("----------");
                 Log.i(TAG, sb.toString());
@@ -89,7 +89,7 @@ public class CalendarSyncAdapterService extends Service {
                 Set<String> processedEntries = new HashSet<String>();
 
                 //TODO Remove -- clears up everything we have
-                CalendarHelper.clearCalendarEntries(mContext, account);
+                //CalendarHelper.clearCalendarEntries(mContext, account);
 
                 for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
                     String rkey = s.getKey();
@@ -100,27 +100,31 @@ public class CalendarSyncAdapterService extends Service {
                         continue;
                     }
 
+                    Log.i(TAG, "Treating: " + rkey);
+
                     //have we already see this entry?
                     if(processedEntries.contains(rkey)) {
-                        Log.w(TAG, "Already processed from server: skipping " + rkey);
+                        Log.w(TAG, "Already processed from server: skipping ");
                         continue;
                     }
 
                     //check if we have this entry locally and update it
                     if(localItems.containsKey(rkey)) {
                         //TODO update
-                        Log.i(TAG, "Updating entry " + rkey);
                         //TODO check for local changes
                         CalendarEntry lval = localItems.get(rkey);
+                        Log.i(TAG, "Checking if update is required with " + lval.getKey());
+
                         if(lval.equals(rval)) {
-                            Log.i(TAG, "\t Entry is identical... nothing to do" + rkey);
+                            Log.i(TAG, "\t Entry is identical... nothing to do");
                         }
                         else {
                             //TODO changes found, upload
-                            Log.i(TAG, "\t Entry is NOT identical... updating" + rkey);
-                            Calendar ldate = Calendar.getInstance();
-                            if(lval.getLastModificationTime() != null && rval.getLastModificationTime() != null) {
-                                ldate.setTime(lval.getLastModificationTime());
+                            Log.i(TAG, "\t Entry is NOT identical... updating");
+                           // Calendar ldate = Calendar.getInstance();
+                            //if(lval.getLastModificationTime() != null && rval.getLastModificationTime() != null) {
+                            if(lval.isDirty()) {
+                                /*ldate.setTime(lval.getLastModificationTime());
 
                                 Calendar rdate = Calendar.getInstance();
                                 rdate.setTime(rval.getLastModificationTime());
@@ -130,10 +134,12 @@ public class CalendarSyncAdapterService extends Service {
                                 }
                                 else {
                                     Log.i(TAG, "\t updating remote " + rkey);
-                                }
+                                }*/
+                                //update remote
+                                Log.i(TAG, "\t updating remote " + rkey);
                             }
                             else {
-                                Log.e(TAG, "\t cannot update, no last modification date set" + rkey);
+                                Log.e(TAG, "\t need to update from remote" + rkey);
                             }
 
                         }
@@ -155,6 +161,11 @@ public class CalendarSyncAdapterService extends Service {
                    processedEntries.add(rkey);
 
                 }
+                // do processed - local
+                Set<String> unprocessedKeys = localItems.keySet();
+                unprocessedKeys.removeAll(processedEntries);
+                Log.i(TAG, "Not processed: " + unprocessedKeys.toString());
+
 
                 /*FindItemsResults<Appointment> appointments = eh.getCalendarItems();
                 for (Appointment appointment : appointments.getItems())

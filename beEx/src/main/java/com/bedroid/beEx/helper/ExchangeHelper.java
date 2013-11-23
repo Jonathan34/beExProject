@@ -108,7 +108,8 @@ public class ExchangeHelper {
         //CALENDAR
         Calendar cal = Calendar.getInstance();
         Date startTime = cal.getTime();
-        cal.add(Calendar.DAY_OF_YEAR, 5); // TODO configure the number of weeks
+        //cal.add(Calendar.DAY_OF_YEAR, 5); // TODO configure the number of weeks
+        cal.set(2013,Calendar.NOVEMBER,26,0,0,0);
         Date endTime = cal.getTime();
 
         CalendarView view = new CalendarView(startTime, endTime);

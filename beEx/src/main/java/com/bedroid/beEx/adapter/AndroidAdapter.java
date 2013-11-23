@@ -50,7 +50,7 @@ public class AndroidAdapter extends GenericAdapter {
             ce.setEnd(cal.getTime());
             //Works: ce.setEnd(new Date(Long.parseLong(c.getString(c.getColumnIndex(CalendarContract.Events.DTSTART)))));
 
-            ce.setDuration(c.getString(c.getColumnIndex(CalendarContract.Events.DURATION)));
+            //ce.setDuration(c.getString(c.getColumnIndex(CalendarContract.Events.DURATION)));
             ce.setLocation(c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_LOCATION)));
             ce.setUid(c.getString(c.getColumnIndex(CalendarContract.Events.UID_2445)));
             ce.setAllDay(c.getInt(c.getColumnIndex(CalendarContract.Events.ALL_DAY)) == 1 ? true : false);
@@ -58,9 +58,13 @@ public class AndroidAdapter extends GenericAdapter {
             ce.setTitle(c.getString(c.getColumnIndex(CalendarContract.Events.TITLE)));
             ce.setStatus(c.getString(c.getColumnIndex(CalendarContract.Events.STATUS)));
 
+
             String organizer = "";
             String adressOrganizer = c.getString(c.getColumnIndex(CalendarContract.Events.ORGANIZER));
             ce.setOrganizer(new People(organizer, adressOrganizer));
+
+            ce.setDirty(c.getLong(c.getColumnIndex(CalendarContract.Events.DIRTY)) == 1 ? true : false);
+            ce.setDeleted(c.getInt(c.getColumnIndex(CalendarContract.Events.DELETED)) == 1 ? true : false);
 
             result.put(ce.getKey(), ce);
 

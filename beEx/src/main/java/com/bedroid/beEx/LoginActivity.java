@@ -7,6 +7,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 //import android.app.Activity;
 import android.accounts.AccountAuthenticatorActivity;
+import android.content.ContentResolver;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -307,14 +308,6 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 e.printStackTrace();
             }
 
-            /*for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }*/
-
             //Retrieve if the account exists and return it
             AccountManager am = AccountManager.get(getBaseContext());
             Account[] accounts = am.getAccountsByType("com.bedroid.beEx.account");
@@ -332,6 +325,19 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 am.setUserData(account, "CALENDAR_ID", calId);
                 am.setUserData(account, "ADAPTER_TYPE", CalendarHelper.CalendarType.EXCHANGE_CALENDAR.toString());
                 am.setUserData(account, "SERVER_URL", mServerUrl);
+
+                //setIsSyncable was not mandatory until android 3.1 or 3.2 now it is.
+                getBaseContext().getContentResolver().setIsSyncable(account, "com.bedroid.beEx.account", 1);
+
+                //Configure it to start every 150 seconds TODO
+                Bundle b = new Bundle();
+                b.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, false);
+                b.putBoolean(ContentResolver.SYNC_EXTRAS_DO_NOT_RETRY, false);
+                b.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, false);
+                ContentResolver.addPeriodicSync(account, "com.bedroid.beEx.account", b, 150);
+                ContentResolver.setSyncAutomatically(account, "com.bedroid.beEx.account", true);
+
+                ContentResolver.requestSync(account,"com.bedroid.beEx.account", b);
             }
 
             return true;
