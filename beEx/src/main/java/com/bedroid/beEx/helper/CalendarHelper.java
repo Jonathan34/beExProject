@@ -9,12 +9,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
+import android.text.format.DateUtils;
 import android.util.Log;
 
 import com.bedroid.beEx.adapter.AndroidAdapter;
 import com.bedroid.beEx.adapter.ExchangeAdapter;
 import com.bedroid.beEx.adapter.IAdapter;
 import com.bedroid.beEx.entity.CalendarEntry;
+import com.bedroid.beEx.entity.People;
 
 import java.util.HashMap;
 import java.util.TimeZone;
@@ -122,6 +124,35 @@ public class CalendarHelper {
         // Retrieve ID for new event
         String eventID = uri.getLastPathSegment();
 
+        for (People p : c.getRequiredPeople()){
+            values.clear();
+            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
+            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_REQUIRED);
+            values.put(CalendarContract.Attendees.ATTENDEE_NAME, p.getName());
+            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, p.getEmail());
+            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, p.getResponseStatus());
+            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
+        }
+
+        for (People p : c.getOptionalPeople()){
+            values.clear();
+            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
+            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_OPTIONAL);
+            values.put(CalendarContract.Attendees.ATTENDEE_NAME, p.getName());
+            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, p.getEmail());
+            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, p.getResponseStatus());
+            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
+        }
+
+        for (People p : c.getResources()){
+            values.clear();
+            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
+            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_RESOURCE);
+            values.put(CalendarContract.Attendees.ATTENDEE_NAME, p.getName());
+            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, p.getEmail());
+            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, p.getResponseStatus());
+            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
+        }
         // TODO adding an attendee:
         /*AttendeeCollection req = c.getRequiredAttendees();
         AttendeeCollection opt = c.getOptionalAttendees();
@@ -157,7 +188,7 @@ public class CalendarHelper {
     }
 
     //this is bugged in exchange server, workaround is to loop over all emails to look for the accept message
-    private static int getStatusFormAppointment(MeetingResponseType m) {
+    public static int getStatusFormAppointment(MeetingResponseType m) {
         if(m == MeetingResponseType.Accept)
             return CalendarContract.Attendees.ATTENDEE_STATUS_ACCEPTED;
         else if(m == MeetingResponseType.NoResponseReceived)
@@ -227,12 +258,13 @@ public class CalendarHelper {
         cv.put(CalendarContract.Calendars.ACCOUNT_TYPE, /*CalendarContract.ACCOUNT_TYPE_LOCAL*/"com.bedroid.beEx.account");
         cv.put(CalendarContract.Calendars.NAME, account.name);
         cv.put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, account.name);
-        cv.put(CalendarContract.Calendars.CALENDAR_COLOR, 4);  //TODO Configure
+        cv.put(CalendarContract.Calendars.CALENDAR_COLOR, 0xFF008080);  //TODO Configure
         cv.put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, CalendarContract.Calendars.CAL_ACCESS_OWNER);
         cv.put(CalendarContract.Calendars.OWNER_ACCOUNT, account.name);
         cv.put(CalendarContract.Calendars.VISIBLE, 1);
         cv.put(CalendarContract.Calendars.SYNC_EVENTS, 1);
-        cv.put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, TimeZone.getDefault().getID());
+        String tz =  TimeZone.getDefault().getID();
+        cv.put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, tz);
         return cv;
     }
 
@@ -265,6 +297,39 @@ public class CalendarHelper {
         return -1;
     }
 
+    public static long dumpCalendarEntries(Account account, ContentResolver cr) {
+        //Duration is RFC5545
+
+        // Run query
+        Cursor cur = null;
+        Uri uri = CalendarContract.Instances.CONTENT_URI;
+
+
+        Uri.Builder builder = uri.buildUpon();
+        ContentUris.appendId(builder, System.currentTimeMillis());
+        ContentUris.appendId(builder, System.currentTimeMillis() + (DateUtils.DAY_IN_MILLIS+21600000));
+
+
+        String selection = "((" + CalendarContract.Calendars.ACCOUNT_NAME + " = ?) AND (" + CalendarContract.Calendars.ACCOUNT_TYPE + " = ?))";
+        String[] selectionArgs = new String[] {account.name, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/};
+        // Submit the query and get a Cursor object back.
+        cur = cr.query(/*uri*/builder.build(), null, selection, selectionArgs, null);
+
+        // Use the cursor to step through the returned records
+        while (cur.moveToNext()) {
+            // Get the field values
+            //long id = cur.getLong(PROJECTION_ID_INDEX);
+            //String name = cur.getString(PROJECTION_DISPLAY_NAME_INDEX);
+            //int color = cur.getInt(PROJECTION_COLOR_INDEX);
+            for(int i=0; i<cur.getColumnCount(); i++) {
+                System.out.println(cur.getColumnName(i) + " -> " + cur.getString(i));
+            }
+            System.out.println("-----------------------");
+        }
+        cur.close();
+        return -1;
+    }
+
     public static <T extends Enum<T>> T getEnumFromString(Class<T> c, String string)
     {
         if( c != null && string != null ) {
@@ -290,4 +355,55 @@ public class CalendarHelper {
             return new ExchangeAdapter(context, account);
         return adapter;
     }
+
+    /*
+    // https://github.com/RHSAndroidDevs/RHSSchoolPlanner/blob/master/src/edu/rhs/school_planner/Homework.java
+    public void getEventsModern() {
+                mHomeworkAdapter.getHomework().clear();
+                //content resolver is how we access android databases like text messages and the calendar
+                ContentResolver cr = getContentResolver();
+                Cursor cursor = cr.query(CalendarContract.Calendars.CONTENT_URI,
+                                new String[]{ CalendarContract.Calendars._ID, CalendarContract.Calendars.NAME, CalendarContract.Calendars.VISIBLE },
+                                null, null, null);
+
+                HashSet<String> calendarIds = new HashSet<String>();
+                while (cursor.moveToNext()) {
+                        final String _id = cursor.getString(0);
+                        final String displayName = cursor.getString(1);
+                        final Boolean selected = !cursor.getString(2).equals("0");
+
+                        Log.v("test","Id: " + _id + " Display Name: " + displayName + " Selected: " + selected);
+                        calendarIds.add(_id);
+                }
+
+                for (String id: calendarIds) {
+                        Uri.Builder builder = CalendarContract.Instances.CONTENT_URI.buildUpon();
+                        ContentUris.appendId(builder, mCalendar.getTimeInMillis());
+                        Log.v("calendar",mCalendar.getTime().toString());
+                        ContentUris.appendId(builder, mCalendar.getTimeInMillis() + (DateUtils.DAY_IN_MILLIS-21600000));
+                        Cursor eventCursor = cr.query(builder.build(),
+                                        new String[] { CalendarContract.Instances.TITLE, CalendarContract.Instances.BEGIN,
+                                CalendarContract.Instances.END, CalendarContract.Instances.ALL_DAY},
+                                CalendarContract.Events.CALENDAR_ID + "=" + id,
+                                null, CalendarContract.Instances.BEGIN + " ASC");
+
+                        while (eventCursor.moveToNext()) {
+                                final String title = eventCursor.getString(0);
+                                final Date begin = new Date(eventCursor.getLong(1));
+                                final Date end = new Date(eventCursor.getLong(2));
+                                final Boolean allDay = !eventCursor.getString(3).equals("0");
+
+                                Log.v("test","Title: " + title + " Begin: " + begin + " End: " + end +
+                                                " All Day: " + allDay);
+
+                                if (allDay) {
+                                        begin.setTime(begin.getTime() + DateUtils.DAY_IN_MILLIS);
+                                }
+
+                                mHomeworkAdapter.addAssignment(new HomeworkAssignment(title,begin.toString()));
+                        }
+
+                        mHomeworkAdapter.notifyDataSetChanged();
+                }
+        }*/
 }

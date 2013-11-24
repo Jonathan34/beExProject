@@ -4,6 +4,8 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.net.URI;
@@ -98,33 +100,6 @@ public class ExchangeHelper {
             //in order to get more properties (such as BODY), we need to call call EWS again
             //Appointment appointmentDetailed = Appointment.bind(service, appointment.getId(), );
         }
-    }
-
-    public FindItemsResults<Appointment> getCalendarItems() throws Exception {
-        if(mService == null) {
-            Log.e(TAG, "getCalendarTest: null service");
-            return null;
-        }
-        //CALENDAR
-        Calendar cal = Calendar.getInstance();
-        Date startTime = cal.getTime();
-        //cal.add(Calendar.DAY_OF_YEAR, 5); // TODO configure the number of weeks
-        cal.set(2013,Calendar.NOVEMBER,26,0,0,0);
-        Date endTime = cal.getTime();
-
-        CalendarView view = new CalendarView(startTime, endTime);
-
-        CalendarFolder folder = CalendarFolder.bind(mService, WellKnownFolderName.Calendar);
-        /*FindItemsResults<Appointment> results = folder.findAppointments(view);
-
-        for (Appointment appointment : results.getItems())
-        {
-            System.out.println("appointment======" + appointment.getSubject()) ;
-            //find appointments will only give basic properties.
-            //in order to get more properties (such as BODY), we need to call call EWS again
-            //Appointment appointmentDetailed = Appointment.bind(service, appointment.getId(), );
-        }*/
-        return folder.findAppointments(view);
     }
 
     public void initializeContext(Context context) {

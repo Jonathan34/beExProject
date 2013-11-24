@@ -1,14 +1,22 @@
 package com.bedroid.beEx;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.CalendarContract;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.bedroid.beEx.helper.ExchangeHelper;
+import com.bedroid.beEx.observer.CalendarObserver;
+import com.bedroid.beEx.sync.CalendarSyncAdapterService;
+
+import java.util.TimeZone;
 
 import microsoft.exchange.webservices.data.ExchangeService;
 
@@ -58,11 +66,14 @@ class TabListener implements ActionBar.TabListener {
 
 
 public class MailItemListActivity extends ActionBarActivity implements MailItemListFragment.Callbacks {
+    private static final String TAG = "MailItemListActivity";
+
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     private boolean mTwoPane;
+    //private CalendarObserver mCalObserver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,14 +91,18 @@ public class MailItemListActivity extends ActionBarActivity implements MailItemL
         ab.addTab(a2.setText("Tab 2").setTabListener(new TabListener(a2)));
 
         // TODO: If exposing deep links into your app, handle intents here.
+        //calendar content provider events
+        //mCalObserver = new CalendarObserver();
+        //getContentResolver().registerContentObserver(CalendarContract.Events.CONTENT_URI, true, mCalObserver);
 
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
-        //System.setProperty("javax.xml.stream.XMLInputFactory", "com.sun.xml.stream.ZephyrParserFactory");
-        //System.setProperty("javax.xml.stream.XMLOutputFactory", "com.sun.xml.stream.ZephyrWriterFactory");
-        //System.setProperty("javax.xml.stream.XMLStreamConstants", "com.javax.xml.stream.XMLStreamConstants");
-
-        //ExchangeHelper.getInstance().initializeContext(getBaseContext());
     }
+
+    /*@Override
+    protected void onStop() {
+        getContentResolver().unregisterContentObserver(mCalObserver);
+    }*/
 
     /**
      * Use this method to instantiate your menu, and add your items to it. You
@@ -117,8 +132,17 @@ public class MailItemListActivity extends ActionBarActivity implements MailItemL
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_refresh:
-                // Here we might start a background refresh task
-                return true;
+                //TODO refresh selected account
+                AccountManager am = AccountManager.get(getBaseContext());
+                Account[] accounts = am.getAccountsByType("com.bedroid.beEx.account");
+                if(accounts != null && accounts.length > 0) {
+                    Bundle b = new Bundle();
+                    b.putBoolean(getContentResolver().SYNC_EXTRAS_MANUAL, true);
+                    b.putBoolean(getContentResolver().SYNC_EXTRAS_EXPEDITED, true);
+                    getContentResolver().requestSync(accounts[0], "com.android.calendar", b);
+                }
+
+                return false;
 
             case R.id.menu_add:
                 // Here we might call LocationManager.requestLocationUpdates()

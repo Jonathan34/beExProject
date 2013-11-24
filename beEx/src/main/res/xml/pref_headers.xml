@@ -4,13 +4,13 @@
     xmlns:support="http://schemas.android.com/apk/res-auto" >
     <!-- These settings headers are only used on tablets. -->
 
-    <header
+    <!--<header
         android:fragment="com.bedroid.beEx.SettingsActivity$GeneralPreferenceFragment"
         android:title="@string/pref_header_general" />
 
     <header
         android:fragment="com.bedroid.beEx.SettingsActivity$NotificationPreferenceFragment"
-        android:title="@string/pref_header_notifications" />
+        android:title="@string/pref_header_notifications" />-->
 
     <header
         android:fragment="com.bedroid.beEx.SettingsActivity$DataSyncPreferenceFragment"

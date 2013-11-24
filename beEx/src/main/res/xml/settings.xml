@@ -3,15 +3,33 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/pref_header_data_sync">
-        <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
-                 dismiss it. -->
-        <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
+        <!-- Sync period -->
         <ListPreference
             android:key="sync_frequency"
             android:title="@string/pref_title_sync_frequency"
             android:entries="@array/pref_sync_frequency_titles"
             android:entryValues="@array/pref_sync_frequency_values"
-            android:defaultValue="180"
+            android:defaultValue="10800"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null" />
+
+        <!-- Past sync range -->
+        <ListPreference
+            android:key="sync_range_before"
+            android:title="@string/pref_title_sync_range_before"
+            android:entries="@array/pref_sync_range_title"
+            android:entryValues="@array/pref_sync_range_values"
+            android:defaultValue="604800"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null" />
+
+        <!-- New sync range -->
+        <ListPreference
+            android:key="sync_range_after"
+            android:title="@string/pref_title_sync_range_after"
+            android:entries="@array/pref_sync_range_title"
+            android:entryValues="@array/pref_sync_range_values"
+            android:defaultValue="604800"
             android:negativeButtonText="@null"
             android:positiveButtonText="@null" />
 
@@ -22,17 +40,6 @@
         </Preference>
     </PreferenceCategory>
 
-    <!--<PreferenceCategory android:title="@string/pref_header_general">
-        <CheckBoxPreference
-            android:key="notifications_new_message"
-            android:title="@string/pref_title_new_message_notifications"
-            android:defaultValue="true" />
-
-        <intent
-            android:action="com.bedroid.beEx.ACCOUNT_SETUP"
-            android:targetPackage="es.tid.popcha.settings"
-            android:targetClass="es.tid.popcha.settings.Preferences"
-            />
-    </PreferenceCategory>-->
-
+    <PreferenceCategory android:title="Test">
+    </PreferenceCategory>
 </PreferenceScreen>

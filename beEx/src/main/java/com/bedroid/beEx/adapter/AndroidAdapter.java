@@ -4,6 +4,7 @@ import android.accounts.Account;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.provider.CalendarContract;
 
 import com.bedroid.beEx.entity.CalendarEntry;
@@ -33,13 +34,24 @@ public class AndroidAdapter extends GenericAdapter {
         String selection = "((" + CalendarContract.Calendars.ACCOUNT_NAME + " = ?) AND (" + CalendarContract.Calendars.ACCOUNT_TYPE + " = ?))";
         String[] selectionArgs = new String[] {mAccount.name, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/};
 
-        Cursor c = cr.query(CalendarContract.Events.CONTENT_URI, null, selection, selectionArgs, null);
+        Uri instanceUri = CalendarContract.Events.CONTENT_URI
+                .buildUpon()
+                .appendQueryParameter(CalendarContract.CALLER_IS_SYNCADAPTER, "true")
+                .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_NAME, mAccount.name)
+                .appendQueryParameter(CalendarContract.Calendars.ACCOUNT_TYPE, "com.bedroid.beEx.account")
+                .build();
+
+        Cursor c = cr.query(instanceUri, null, selection, selectionArgs, null);
         while (c.moveToNext()) {
             CalendarEntry ce = new CalendarEntry();
 
             ce.setCalendarId(c.getLong(c.getColumnIndex(CalendarContract.Events._ID)));
             ce.setColor(c.getInt(c.getColumnIndex(CalendarContract.Events.CALENDAR_COLOR)));
-            ce.setTimeZone(TimeZone.getTimeZone(c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_TIMEZONE))));
+
+            String tz = c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_TIMEZONE));
+            String tze = c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_END_TIMEZONE));
+            ce.setTimeZone(TimeZone.getTimeZone(tz));
+            ce.setEndTimeZone(TimeZone.getTimeZone(tze));
 
             Calendar cal = Calendar.getInstance();
             cal.setTimeInMillis(Long.parseLong(c.getString(c.getColumnIndex(CalendarContract.Events.DTSTART))));
@@ -63,9 +75,10 @@ public class AndroidAdapter extends GenericAdapter {
             String adressOrganizer = c.getString(c.getColumnIndex(CalendarContract.Events.ORGANIZER));
             ce.setOrganizer(new People(organizer, adressOrganizer));
 
-            ce.setDirty(c.getLong(c.getColumnIndex(CalendarContract.Events.DIRTY)) == 1 ? true : false);
-            ce.setDeleted(c.getInt(c.getColumnIndex(CalendarContract.Events.DELETED)) == 1 ? true : false);
+            ce.setDirty(c.getLong(c.getColumnIndex(CalendarContract.Events.DIRTY)) != 0);
+            ce.setDeleted(c.getInt(c.getColumnIndex(CalendarContract.Events.DELETED)) != 0);
 
+            System.out.println("deleted " + ce.isDeleted());
             result.put(ce.getKey(), ce);
 
             //result.add(CalendarContract.Calendars.NAME, );

@@ -8,10 +8,12 @@ import android.annotation.TargetApi;
 //import android.app.Activity;
 import android.accounts.AccountAuthenticatorActivity;
 import android.content.ContentResolver;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -329,12 +331,13 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 //setIsSyncable was not mandatory until android 3.1 or 3.2 now it is.
                 getBaseContext().getContentResolver().setIsSyncable(account, "com.bedroid.beEx.account", 1);
 
-                //Configure it to start every 150 seconds TODO
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
                 Bundle b = new Bundle();
                 b.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, false);
                 b.putBoolean(ContentResolver.SYNC_EXTRAS_DO_NOT_RETRY, false);
                 b.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, false);
-                ContentResolver.addPeriodicSync(account, "com.bedroid.beEx.account", b, 150);
+                ContentResolver.addPeriodicSync(account, "com.bedroid.beEx.account", b, sharedPrefs.getInt("sync_frequency", 10800));
                 ContentResolver.setSyncAutomatically(account, "com.bedroid.beEx.account", true);
 
                 ContentResolver.requestSync(account,"com.bedroid.beEx.account", b);

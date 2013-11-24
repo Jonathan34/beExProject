@@ -1,15 +1,19 @@
 package com.bedroid.beEx.entity;
 
+import java.util.AbstractCollection;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.TimeZone;
 
 import android.content.ContentValues;
 import android.provider.CalendarContract;
 
 import microsoft.exchange.webservices.data.Appointment;
+import microsoft.exchange.webservices.data.AttendeeCollection;
 import microsoft.exchange.webservices.data.MessageBody;
 import microsoft.exchange.webservices.data.TimeSpan;
+import microsoft.exchange.webservices.data.TimeZoneDefinition;
 
 public class CalendarEntry {
 
@@ -36,6 +40,12 @@ public class CalendarEntry {
 
     private boolean isDirty = false;
     private boolean deleted;
+    private TimeZone startTimeZone;
+    private TimeZone endTimeZone;
+
+    private HashSet<People> mRequiredPeople = new HashSet<People>();
+    private HashSet<People> mOptionalPeople = new HashSet<People>();
+    private HashSet<People> mResources = new HashSet<People>();
 
     public String getUid()  { return this.uid; }
 
@@ -182,6 +192,7 @@ public class CalendarEntry {
         return buffer.toString();
     }*/
 
+    //to build a calendar entry
     public static ContentValues getContentValues(CalendarEntry ce) {
         ContentValues values = new ContentValues();
 
@@ -193,11 +204,15 @@ public class CalendarEntry {
         values.put(CalendarContract.Events.DTEND, end.getTime());
         String tz = ce.getTimeZone().getID();
         values.put(CalendarContract.Events.EVENT_TIMEZONE, ce.getTimeZone().getID());
+        values.put(CalendarContract.Events.EVENT_END_TIMEZONE, ce.getTimeZone().getID());
+        //values.put(CalendarContract.Events.EVENT_START_TIMEZONE, ce.getTimeZone().getID());
+
         values.put(CalendarContract.Events.TITLE, ce.getTitle());
         values.put(CalendarContract.Events.DESCRIPTION, ce.getDescription());
         //values.put(CalendarContract.Events.CALENDAR_COLOR, ce.getColor());
         values.put(CalendarContract.Events.ORGANIZER, ce.getOrganizer().getEmail());
         values.put(CalendarContract.Events.EVENT_LOCATION, ce.getLocation());
+        values.put(CalendarContract.Events.DIRTY, ce.isDirty());
 
         //Compute duration
         /*Time end = new Time(ce.getEnd());
@@ -230,30 +245,6 @@ public class CalendarEntry {
         //values.put(CalendarContract.Events.LAST_DATE, )
 
         return values;
-    }
-
-    public boolean loadFromAppointment(Appointment a) throws Exception {
-        if (a == null)
-            return false;
-
-        this.setTimeZone(TimeZone.getTimeZone(a.getTimeZone()));
-        this.setTitle(a.getSubject());
-        //String when = appointment.getWhen();
-        this.setStart(a.getStart());
-        this.setEnd(a.getEnd());
-        this.setDescription(MessageBody.getStringFromMessageBody(a.getBody()));
-        this.setOrganizer(new People(a.getOrganizer().getName(), a.getOrganizer().getAddress()));
-        //TODO set attendeeds
-        //this.setCalendarId(cal_id);
-        this.setAllDay(a.getIsAllDayEvent());
-        this.setUid(a.getId().getUniqueId());
-        this.setLocation(a.getLocation());
-        /*TimeSpan dur = a.getDuration();
-        this.setDuration(dur);//SCRUBBING*/
-
-        this.setLastModificationTime(a.getLastModifiedTime());
-
-        return true;
     }
 
     public void setOrganizer(People organizer) {
@@ -290,6 +281,49 @@ public class CalendarEntry {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public void setStartTimeZone(TimeZone startTimeZone) {
+        this.startTimeZone = startTimeZone;
+    }
+
+    public TimeZone getStartTimeZone() {
+        return startTimeZone;
+    }
+
+    public void setEndTimeZone(TimeZone endTimeZone) {
+        this.endTimeZone = endTimeZone;
+    }
+
+    public TimeZone getEndTimeZone() {
+        return endTimeZone;
+    }
+
+    public void addRequiredPeople(People p) {
+        if(!mRequiredPeople.contains(p))
+            mRequiredPeople.add(p);
+    }
+
+    public void addOptionalPeople(People p) {
+        if(!mOptionalPeople.contains(p))
+            mOptionalPeople.add(p);
+    }
+
+    public void addResource(People p) {
+        if(!mResources.contains(p))
+            mResources.add(p);
+    }
+
+    public HashSet<People> getRequiredPeople() {
+        return mRequiredPeople;
+    }
+
+    public HashSet<People> getOptionalPeople() {
+        return mOptionalPeople;
+    }
+
+    public HashSet<People> getResources() {
+        return mResources;
     }
 
     /*public static CalendarEntry createFromAppointment(Appointment appointment) {

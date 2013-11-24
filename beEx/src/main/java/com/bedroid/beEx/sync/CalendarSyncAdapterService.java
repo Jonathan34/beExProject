@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SyncResult;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.CalendarContract;
 import android.util.Log;
 
 import com.bedroid.beEx.adapter.ExchangeAdapter;
@@ -18,6 +19,7 @@ import com.bedroid.beEx.adapter.IAdapter;
 import com.bedroid.beEx.entity.CalendarEntry;
 import com.bedroid.beEx.helper.CalendarHelper;
 import com.bedroid.beEx.helper.ExchangeHelper;
+import com.bedroid.beEx.observer.CalendarObserver;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -39,6 +41,7 @@ public class CalendarSyncAdapterService extends Service {
 
     private static final String TAG = "CalendarSyncAdapterService";
     private static SyncAdapterImpl sSyncAdapter = null;
+    //
 
     public CalendarSyncAdapterService() {
         super();
@@ -50,7 +53,7 @@ public class CalendarSyncAdapterService extends Service {
         public SyncAdapterImpl(Context context) {
             super(context, true);
             mContext = context;
-        }
+         }
 
         @Override
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
@@ -71,13 +74,15 @@ public class CalendarSyncAdapterService extends Service {
                 //HashMap<String, CalendarEntry> remoteItems = CalendarHelper.loadFromRemoteCalendar(mContext, service);
                 HashMap<String, CalendarEntry> remoteItems = remoteAdapter.getAppointments();
 
+                CalendarHelper.dumpCalendarEntries(account, mContext.getContentResolver());
+
                 //1.c debug
                 StringBuilder sb = new StringBuilder("--CALENDAR LOCAL DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: localItems.entrySet()) {
                     sb.append("\n("+s.getKey() /*+"|"+s.getValue()*/+")");
                 }
                 sb.append("----------");
-                Log.i(TAG, sb.toString());
+                //Log.i(TAG, sb.toString());
 
                 sb = new StringBuilder("--CALENDAR REMOTE DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
@@ -85,6 +90,11 @@ public class CalendarSyncAdapterService extends Service {
                 }
                 sb.append("----------");
                 Log.i(TAG, sb.toString());
+
+                // TODO do processed - local
+                Set<String> deletedKeys = remoteItems.keySet();
+                deletedKeys.removeAll(localItems.keySet());
+                Log.i(TAG, "Deleted: " + deletedKeys.toString());
 
                 Set<String> processedEntries = new HashSet<String>();
 
@@ -206,9 +216,10 @@ public class CalendarSyncAdapterService extends Service {
         return sSyncAdapter;
     }
 
-    private static void performSync(Context context, Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult)
+    /*private static void performSync(Context context, Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult)
             throws OperationCanceledException {
-    }
+        System.out.println("????");
+    }*/
 }
       /*long id = CalendarHelper.fetchCalendars(account, context.getContentResolver());
             if(id == -1) {

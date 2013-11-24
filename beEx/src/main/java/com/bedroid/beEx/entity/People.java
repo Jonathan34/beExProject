@@ -3,6 +3,15 @@ package com.bedroid.beEx.entity;
 public class People {
     private String m_name;
     private String m_email;
+    private int responseStatus;
+
+    public void setResponseStatus(int responseStatus) {
+        this.responseStatus = responseStatus;
+    }
+
+    public int getResponseStatus() {
+        return responseStatus;
+    }
 
     public People(String name, String email) {
         this.m_name = name;
