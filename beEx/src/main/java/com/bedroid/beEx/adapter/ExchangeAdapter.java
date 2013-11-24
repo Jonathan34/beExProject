@@ -36,7 +36,7 @@ public class ExchangeAdapter extends GenericAdapter {
 
     private static final String TAG = "ExchangeAdapter";
     private ExchangeService mService = null;
-    private boolean TEST_MODE = true;
+    private boolean TEST_MODE = false;
 
     public ExchangeAdapter(Context c, Account a) {
         super(c, a);
