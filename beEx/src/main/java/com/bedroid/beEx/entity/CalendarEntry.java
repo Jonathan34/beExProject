@@ -39,7 +39,7 @@ public class CalendarEntry {
     private Date lastModificationTime;
 
     private boolean isDirty = false;
-    private boolean deleted;
+    private boolean deleted = false;
     private TimeZone startTimeZone;
     private TimeZone endTimeZone;
 
@@ -212,7 +212,8 @@ public class CalendarEntry {
         //values.put(CalendarContract.Events.CALENDAR_COLOR, ce.getColor());
         values.put(CalendarContract.Events.ORGANIZER, ce.getOrganizer().getEmail());
         values.put(CalendarContract.Events.EVENT_LOCATION, ce.getLocation());
-        values.put(CalendarContract.Events.DIRTY, ce.isDirty());
+        values.put(CalendarContract.Events.DIRTY, /*ce.isDirty() ? 1 : */0);
+        values.put(CalendarContract.Events.DELETED, /*ce.isDeleted() ? 1 : */0);
 
         //Compute duration
         /*Time end = new Time(ce.getEnd());

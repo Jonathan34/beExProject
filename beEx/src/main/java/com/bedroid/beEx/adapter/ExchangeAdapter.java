@@ -36,7 +36,7 @@ public class ExchangeAdapter extends GenericAdapter {
 
     private static final String TAG = "ExchangeAdapter";
     private ExchangeService mService = null;
-    private boolean TEST_MODE = false;
+    private boolean TEST_MODE = true;
 
     public ExchangeAdapter(Context c, Account a) {
         super(c, a);
@@ -108,7 +108,7 @@ public class ExchangeAdapter extends GenericAdapter {
         if(TEST_MODE == false)
             cal.add(Calendar.SECOND, secsAfter);
         else
-            cal.set(2013,Calendar.NOVEMBER,26,0,0,0);
+            cal.set(2013,Calendar.NOVEMBER,27,0,0,0);
         Date endTime = cal.getTime();
 
         CalendarView view = new CalendarView(startTime, endTime);

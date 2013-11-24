@@ -28,6 +28,26 @@ public class AndroidAdapter extends GenericAdapter {
 
     @Override
     public HashMap<String, CalendarEntry> getAppointments() {
+        /****TEST*****/
+        // Compute number of dirty events in the calendar
+        final String[] EVENTS_PROJECTION = new String[]{
+                CalendarContract.Events._ID,
+        };
+        String dirtyWhere = CalendarContract.Events.CALENDAR_ID + "=" + 1
+                + " AND " + CalendarContract.Events.DIRTY + "=1";
+        Cursor dirtyCursor = mContext.getContentResolver().query(
+                CalendarContract.Events.CONTENT_URI, null, dirtyWhere,
+                null, null);
+        int dirtyCount = 0;
+        try {
+            dirtyCount = dirtyCursor.getCount();
+        } finally {
+            dirtyCursor.close();
+        }
+        /****TEST*****/
+
+
+
         HashMap<String, CalendarEntry> result = new HashMap<String, CalendarEntry>();
 
         ContentResolver cr = mContext.getContentResolver();
@@ -75,8 +95,10 @@ public class AndroidAdapter extends GenericAdapter {
             String adressOrganizer = c.getString(c.getColumnIndex(CalendarContract.Events.ORGANIZER));
             ce.setOrganizer(new People(organizer, adressOrganizer));
 
-            ce.setDirty(c.getLong(c.getColumnIndex(CalendarContract.Events.DIRTY)) != 0);
-            ce.setDeleted(c.getInt(c.getColumnIndex(CalendarContract.Events.DELETED)) != 0);
+            long dirty = c.getLong(c.getColumnIndex(CalendarContract.Events.DIRTY));
+
+            ce.setDirty(dirty != 0);
+            ce.setDeleted(c.getLong(c.getColumnIndex(CalendarContract.Events.DELETED)) != 0);
 
             System.out.println("deleted " + ce.isDeleted());
             result.put(ce.getKey(), ce);
