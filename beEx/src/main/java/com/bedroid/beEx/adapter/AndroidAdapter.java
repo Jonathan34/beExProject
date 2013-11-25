@@ -90,17 +90,17 @@ public class AndroidAdapter extends GenericAdapter {
             ce.setTitle(c.getString(c.getColumnIndex(CalendarContract.Events.TITLE)));
             ce.setStatus(c.getString(c.getColumnIndex(CalendarContract.Events.STATUS)));
 
+            cal.setTimeInMillis(c.getLong(c.getColumnIndex(CalendarContract.Events.SYNC_DATA1)));
+            ce.setLastModificationTime(cal.getTime());
 
             String organizer = "";
             String adressOrganizer = c.getString(c.getColumnIndex(CalendarContract.Events.ORGANIZER));
             ce.setOrganizer(new People(organizer, adressOrganizer));
 
             long dirty = c.getLong(c.getColumnIndex(CalendarContract.Events.DIRTY));
-
             ce.setDirty(dirty != 0);
             ce.setDeleted(c.getLong(c.getColumnIndex(CalendarContract.Events.DELETED)) != 0);
 
-            System.out.println("deleted " + ce.isDeleted());
             result.put(ce.getKey(), ce);
 
             //result.add(CalendarContract.Calendars.NAME, );

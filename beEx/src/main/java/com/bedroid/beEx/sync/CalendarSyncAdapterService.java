@@ -74,7 +74,7 @@ public class CalendarSyncAdapterService extends Service {
                 //HashMap<String, CalendarEntry> remoteItems = CalendarHelper.loadFromRemoteCalendar(mContext, service);
                 HashMap<String, CalendarEntry> remoteItems = remoteAdapter.getAppointments();
 
-                CalendarHelper.dumpCalendarEntries(account, mContext.getContentResolver());
+                //CalendarHelper.dumpCalendarEntries(account, mContext.getContentResolver());
 
                 //1.c debug
                 StringBuilder sb = new StringBuilder("--CALENDAR LOCAL DUMP--");
@@ -82,7 +82,7 @@ public class CalendarSyncAdapterService extends Service {
                     sb.append("\n("+s.getKey() /*+"|"+s.getValue()*/+")");
                 }
                 sb.append("----------");
-                //Log.i(TAG, sb.toString());
+                Log.i(TAG, sb.toString());
 
                 sb = new StringBuilder("--CALENDAR REMOTE DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
@@ -92,16 +92,57 @@ public class CalendarSyncAdapterService extends Service {
                 Log.i(TAG, sb.toString());
 
                 // TODO do processed - local
-                Set<String> deletedKeys = remoteItems.keySet();
-                deletedKeys.removeAll(localItems.keySet());
-                Log.i(TAG, "Deleted: " + deletedKeys.toString());
+                //Set<String> deletedKeys = remoteItems.keySet();
+                //deletedKeys.removeAll(localItems.keySet());
+                //Log.i(TAG, "Deleted: " + deletedKeys.toString());
 
                 Set<String> processedEntries = new HashSet<String>();
 
                 //TODO Remove -- clears up everything we have
                 //CalendarHelper.clearCalendarEntries(mContext, account);
 
+                for (Map.Entry<String, CalendarEntry> s: localItems.entrySet()) {
+                    String lkey = s.getKey();
+                    CalendarEntry lval = s.getValue();
+
+                    if(remoteItems.containsKey(lkey)) {
+                        CalendarEntry rval = remoteItems.get(lkey);
+
+                        if(rval != null) {
+                            Log.i(TAG, "Checking if update is required with " + lkey);
+                            if(!lval.equals(rval)) {
+                                //update
+                                //check if remote or local changes? use last sync date and compare to remote last modification date?
+                                long lmd = lval.getLastModificationTime().getTime();
+                                long rmd = rval.getLastModificationTime().getTime();
+                                if(lmd < rmd) {
+                                    Log.i(TAG, "\t Entry is NOT identical... updating LOCAL");
+                                }
+                                else {
+                                    Log.i(TAG, "\t Entry is NOT identical... updating REMOTE");
+                                }
+                            }
+                            else {
+                                Log.i(TAG, "\t Entry is identical... nothing to do");
+                            }
+                        }
+                        remoteItems.remove(lkey);//processed
+                    }
+                    else {
+                        // Entry doesn't exist. Remove it from the database.
+                        Log.i(TAG, "\t Entry does not exist... removing from local database");
+                    }
+                }
+
+                // Add new items
                 for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
+                    CalendarEntry rval = s.getValue();
+                    if(rval != null) {
+                        String id = CalendarHelper.addCalendarEntry(mContext, account, rval);
+                        Log.i(TAG, "Added entry " + id);
+                    }
+                }
+                /*for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
                     String rkey = s.getKey();
                     CalendarEntry rval = s.getValue();
 
@@ -146,7 +187,7 @@ public class CalendarSyncAdapterService extends Service {
                                     Log.i(TAG, "\t updating remote " + rkey);
                                 }*/
                                 //update remote
-                                Log.i(TAG, "\t updating remote " + rkey);
+                                /*Log.i(TAG, "\t updating remote " + rkey);
                             }
                             else {
                                 Log.e(TAG, "\t need to update from remote" + rkey);
@@ -159,9 +200,6 @@ public class CalendarSyncAdapterService extends Service {
                     }
                     else {
                         //TODO Add remote entry on local side
-                        /*if(processedEntries.contains(rkey)) {
-                            Log.w(TAG, "Already processed from server: skipping " + rkey);
-                        }*/
                         String id = CalendarHelper.addCalendarEntry(mContext, account, rval);
                         Log.i(TAG, "Added entry " + id);
                     }
@@ -170,11 +208,11 @@ public class CalendarSyncAdapterService extends Service {
                    //todo flag correctly processed entries (what if the entry is not updated or added? it is probably deleted?
                    processedEntries.add(rkey);
 
-                }
+                }*/
                 // do processed - local
-                Set<String> unprocessedKeys = localItems.keySet();
-                unprocessedKeys.removeAll(processedEntries);
-                Log.i(TAG, "Not processed: " + unprocessedKeys.toString());
+                //Set<String> unprocessedKeys = localItems.keySet();
+                //unprocessedKeys.removeAll(processedEntries);
+                //Log.i(TAG, "Not processed: " + unprocessedKeys.toString());
 
 
                 /*FindItemsResults<Appointment> appointments = eh.getCalendarItems();

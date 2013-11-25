@@ -151,15 +151,15 @@ public class CalendarEntry {
         CalendarEntry that = (CalendarEntry)aThat;
 
         //now a proper field-by-field evaluation can be made
-        boolean res = this.getTitle().equals(that.getTitle());
+        boolean res = (this.getTitle() == null && that.getTitle() == null ? true : this.getTitle().equals(that.getTitle()));
         res = res && this.getStart().equals(that.getStart());
         res = res && this.getEnd().equals(that.getEnd());
         res = res && this.getAllDay() == that.getAllDay();
                 //&& this.getColor() == that.getColor()
-        res = res && this.getLocation().equals(that.getLocation());
+        res = res && (this.getLocation() == null && that.getLocation() == null ? true : this.getLocation().equals(that.getLocation()));
         res = res && this.getKey().equals(that.getKey());
         res = res && (this.getStatus() == null && that.getStatus() == null ? true : this.getStatus().equals(that.getStatus()));
-        res = res && this.getDescription().equals(that.getDescription());
+        res = res && (this.getDescription() == null && that.getDescription() == null ? true : this.getDescription().equals(that.getDescription()));
         res = res && this.getTimeZone().equals(that.getTimeZone());
         return res;
                 //&& this.getDuration() == that.getDuration()
@@ -207,6 +207,10 @@ public class CalendarEntry {
         values.put(CalendarContract.Events.EVENT_END_TIMEZONE, ce.getTimeZone().getID());
         //values.put(CalendarContract.Events.EVENT_START_TIMEZONE, ce.getTimeZone().getID());
 
+        //test UID
+        values.put(CalendarContract.Events.UID_2445, ce.getUid());
+        values.put(CalendarContract.Events.SYNC_DATA1, ce.getLastModificationTime().getTime());
+
         values.put(CalendarContract.Events.TITLE, ce.getTitle());
         values.put(CalendarContract.Events.DESCRIPTION, ce.getDescription());
         //values.put(CalendarContract.Events.CALENDAR_COLOR, ce.getColor());
@@ -214,6 +218,8 @@ public class CalendarEntry {
         values.put(CalendarContract.Events.EVENT_LOCATION, ce.getLocation());
         values.put(CalendarContract.Events.DIRTY, /*ce.isDirty() ? 1 : */0);
         values.put(CalendarContract.Events.DELETED, /*ce.isDeleted() ? 1 : */0);
+
+
 
         //Compute duration
         /*Time end = new Time(ce.getEnd());
@@ -257,7 +263,8 @@ public class CalendarEntry {
     }
 
     public String getKey() {
-        return getOrganizer().getEmail() + " :: " +  getTitle() + " at " +  getStart().toString();
+        //return getOrganizer().getEmail() + " :: " +  getTitle() + " at " +  getStart().toString();
+        return getUid();
     }
 
     public void setLastModificationTime(Date lastModificationTime) {
