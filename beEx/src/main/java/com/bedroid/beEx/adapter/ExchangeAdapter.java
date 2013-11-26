@@ -25,21 +25,26 @@ import microsoft.exchange.webservices.data.BasePropertySet;
 import microsoft.exchange.webservices.data.BodyType;
 import microsoft.exchange.webservices.data.CalendarFolder;
 import microsoft.exchange.webservices.data.CalendarView;
+import microsoft.exchange.webservices.data.ConflictResolutionMode;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.FindItemsResults;
 import microsoft.exchange.webservices.data.MessageBody;
 import microsoft.exchange.webservices.data.PropertySet;
 import microsoft.exchange.webservices.data.ServiceLocalException;
+import microsoft.exchange.webservices.data.TimeZoneDefinition;
 import microsoft.exchange.webservices.data.WellKnownFolderName;
 
 public class ExchangeAdapter extends GenericAdapter {
 
     private static final String TAG = "ExchangeAdapter";
     private ExchangeService mService = null;
-    private boolean TEST_MODE = true;
+    private boolean TEST_MODE = false;
+
+    private HashMap<String, Appointment> mLocalAppointments;
 
     public ExchangeAdapter(Context c, Account a) {
         super(c, a);
+        mLocalAppointments = new HashMap<String, Appointment>();
     }
 
     @Override
@@ -50,6 +55,7 @@ public class ExchangeAdapter extends GenericAdapter {
     @Override
     public HashMap<String, CalendarEntry> getAppointments() {
         HashMap<String, CalendarEntry> result = new HashMap<String, CalendarEntry>();
+        mLocalAppointments.clear();
 
         ExchangeHelper eh = ExchangeHelper.getInstance();
         try {
@@ -73,8 +79,10 @@ public class ExchangeAdapter extends GenericAdapter {
 
                 Appointment a = Appointment.bind(mService, appointment.getId(), psPropSet);
                 CalendarEntry ce = loadFromAppointment(a);
-                if(ce != null)
+                if(ce != null) {
                     result.put(ce.getKey(), ce);
+                    mLocalAppointments.put(ce.getKey(), a);
+                }
             }
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -85,6 +93,33 @@ public class ExchangeAdapter extends GenericAdapter {
         }
 
         return result;
+    }
+
+    @Override
+    public boolean updateEntry(CalendarEntry local, CalendarEntry remote) {
+        if(local == null || remote == null)
+            return false;
+
+        if(mLocalAppointments.containsKey(local.getKey())) {
+            Appointment a = mLocalAppointments.get(local.getKey());
+            if(a != null) {
+                try {
+                    //TODO Timezone
+                    //TODO Attendees
+                    a.setSubject(local.getTitle());
+                    a.setStart(local.getStart());
+                    a.setEnd(local.getEnd());
+                    a.setIsAllDayEvent(local.getAllDay());
+                    a.setLocation(local.getLocation());
+                    a.setBody(MessageBody.getMessageBodyFromText(local.getDescription()));
+                    //a.setStartTimeZone(new TimeZoneDefinition(local.getTimeZone().getID()));
+                    a.update(ConflictResolutionMode.AutoResolve);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
     }
 
     public FindItemsResults<Appointment> getCalendarItems() throws Exception {
@@ -102,6 +137,8 @@ public class ExchangeAdapter extends GenericAdapter {
         Calendar cal = Calendar.getInstance();
         if(TEST_MODE == false)
             cal.add(Calendar.SECOND, -secsBefore);
+        else
+            cal.set(2013,Calendar.NOVEMBER,26,0,0,0);
         Date startTime = cal.getTime();
 
         cal = Calendar.getInstance();
@@ -136,70 +173,36 @@ public class ExchangeAdapter extends GenericAdapter {
         ce.setTimeZone(TimeZone.getTimeZone(tz));
 
         ce.setTitle(a.getSubject());
-        //String when = appointment.getWhen();
         ce.setStart(a.getStart());
         ce.setEnd(a.getEnd());
         ce.setDescription(MessageBody.getStringFromMessageBody(a.getBody()));
         ce.setOrganizer(new People(a.getOrganizer().getName(), a.getOrganizer().getAddress()));
-        //this.setCalendarId(cal_id);
         ce.setAllDay(a.getIsAllDayEvent());
         ce.setUid(a.getId().getUniqueId());
         ce.setLocation(a.getLocation());
-        /*TimeSpan dur = a.getDuration();
-        this.setDuration(dur);//SCRUBBING*/
 
         ce.setLastModificationTime(a.getLastModifiedTime());
 
         AttendeeCollection req = a.getRequiredAttendees();
         for (Attendee at : req){
             People p = new People(at.getName(), at.getAddress());
-            p.setResponseStatus(CalendarHelper.getStatusFormAppointment(at.getResponseType()));
+            p.setResponseStatus(CalendarHelper.getStatusFromAppointment(at.getResponseType()));
             ce.addRequiredPeople(p);
         }
 
         AttendeeCollection opt = a.getOptionalAttendees();
         for (Attendee at : opt){
             People p = new People(at.getName(), at.getAddress());
-            p.setResponseStatus(CalendarHelper.getStatusFormAppointment(at.getResponseType()));
+            p.setResponseStatus(CalendarHelper.getStatusFromAppointment(at.getResponseType()));
             ce.addOptionalPeople(p);
         }
 
         AttendeeCollection resources = a.getRequiredAttendees();
         for (Attendee at : resources){
             People p = new People(at.getName(), at.getAddress());
-            p.setResponseStatus(CalendarHelper.getStatusFormAppointment(at.getResponseType()));
+            p.setResponseStatus(CalendarHelper.getStatusFromAppointment(at.getResponseType()));
             ce.addResource(p);
         }
-        /*AttendeeCollection req = this.getRequiredAttendees();
-        AttendeeCollection opt = c.getOptionalAttendees();
-        AttendeeCollection res = c.getResources();
-        for (Attendee a : req){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_REQUIRED);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }
-        for (Attendee a : opt){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_OPTIONAL);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }
-        for (Attendee a : res){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_RESOURCE);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }*/
 
         return ce;
     }

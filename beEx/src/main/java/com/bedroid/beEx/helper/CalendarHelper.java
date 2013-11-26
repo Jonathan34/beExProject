@@ -18,7 +18,9 @@ import com.bedroid.beEx.adapter.IAdapter;
 import com.bedroid.beEx.entity.CalendarEntry;
 import com.bedroid.beEx.entity.People;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.TimeZone;
 
 import microsoft.exchange.webservices.data.MeetingResponseType;
@@ -98,97 +100,137 @@ public class CalendarHelper {
         return false;
     }
 
-    public static String addCalendarEntry(Context context, Account account, /*long cal_id,*/ CalendarEntry c) throws ServiceLocalException {
-        // Insert Event
+    public static String addCalendarEntry(Context context, Account account, CalendarEntry c) throws ServiceLocalException {
+        ContentResolver cr = context.getContentResolver();
+
+        // get calendar id: when adding a new item from remote, the calendar id is not set
         String cal_id = CalendarHelper.getCalendarId(context, account);
         if(cal_id == null) {
-            Log.e(TAG, "Error jersdf");
+            Log.e(TAG, "Error calendar id is incorrect");
             return null;
         }
         c.setCalendarId(Long.parseLong(cal_id));
+        Log.d(TAG, " calendar id is " + cal_id);
+
+        //get content values from the calendar entry
         ContentValues values = CalendarEntry.getContentValues(c);
-        ContentResolver cr = context.getContentResolver();
 
-        //values.put(CalendarContract.Events.SYNC_DATA1, appointment.getId().getUniqueId());
-        //Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
-
-        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Events.CONTENT_URI, account, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/);
+        //do the insert query
+        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Events.CONTENT_URI, account, "com.bedroid.beEx.account");
         Uri uri = cr.insert(syncUri, values);
 
-        /*****
-         * To query:
-         * cur = cr.query(Uri.parse("content://com.android.calendar/events"), null, Events.DIRTY+" = ?", new String[]{String.valueOf(1)}, null);
-         *  while (cur.moveToNext()) {
-         *  int id = (int) cur.getLong(cur.getColumnIndex(Events._ID));
-         */
         // Retrieve ID for new event
         String eventID = uri.getLastPathSegment();
 
-        for (People p : c.getRequiredPeople()){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_REQUIRED);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, p.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, p.getEmail());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, p.getResponseStatus());
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }
+        //add people
+        CalendarHelper.addPeople(cr, account, eventID, c);
 
-        for (People p : c.getOptionalPeople()){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_OPTIONAL);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, p.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, p.getEmail());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, p.getResponseStatus());
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }
-
-        for (People p : c.getResources()){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_RESOURCE);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, p.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, p.getEmail());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, p.getResponseStatus());
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }
-        // TODO adding an attendee:
-        /*AttendeeCollection req = c.getRequiredAttendees();
-        AttendeeCollection opt = c.getOptionalAttendees();
-        AttendeeCollection res = c.getResources();
-        for (Attendee a : req){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_REQUIRED);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }
-        for (Attendee a : opt){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_OPTIONAL);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }
-        for (Attendee a : res){
-            values.clear();
-            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
-            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, CalendarContract.Attendees.TYPE_RESOURCE);
-            values.put(CalendarContract.Attendees.ATTENDEE_NAME, a.getName());
-            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, a.getAddress());
-            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, CalendarHelper.getStatusFormAppointment(a.getResponseType()));
-            cr.insert(CalendarContract.Attendees.CONTENT_URI, values);
-        }*/
         return eventID;
     }
 
+    public static int deleteCalendarEntry(ContentResolver cr, long event_id) {
+        String[] selArgs = new String[]{Long.toString(event_id)};
+        int deleted =
+                cr.delete(CalendarContract.Events.CONTENT_URI,
+                        CalendarContract.Events._ID + " =? ",
+                        selArgs);
+        return deleted;
+    }
+
+    public static int updateEntry(Context context, Account account, CalendarEntry local, CalendarEntry remote) {
+        //get all content values from the calendar entry
+
+        //update the remote calendar id for the update
+        remote.setCalendarId(local.getCalendarId());
+
+        ContentValues values = CalendarEntry.getContentValues(remote);
+        ContentResolver cr = context.getContentResolver();
+        String[] selArgs = new String[]{local.getEventId()};
+
+        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Events.CONTENT_URI, account, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/);
+        //Uri uri = cr.insert(syncUri, values);
+
+        int updated =
+                cr.
+                        update(
+                                syncUri,
+                                values,
+                                CalendarContract.Events._ID + " =? ",
+                                selArgs);
+
+        System.out.println(updated);
+        CalendarHelper.updatePeople(context.getContentResolver(), account, local.getEventId(), remote);
+        return updated;
+    }
+
+    private static ArrayList<ContentValues> getPeopleContentValues(String eventID, HashSet<People> peopleList, int type) {
+        ArrayList<ContentValues> result = new ArrayList<ContentValues>();
+        ContentValues values;
+
+        for (People p : peopleList){
+            values = new ContentValues();
+            values.put(CalendarContract.Attendees.EVENT_ID, eventID);
+            values.put(CalendarContract.Attendees.ATTENDEE_TYPE, type);
+            values.put(CalendarContract.Attendees.ATTENDEE_NAME, p.getName());
+            values.put(CalendarContract.Attendees.ATTENDEE_EMAIL, p.getEmail());
+            values.put(CalendarContract.Attendees.ATTENDEE_STATUS, p.getResponseStatus());
+            result.add(values);
+        }
+        return result;
+    }
+
+    private static void addPeople(ContentResolver cr, Account account, String eventID, CalendarEntry c) {
+        ContentValues values = new ContentValues();
+
+        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Attendees.CONTENT_URI, account, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/);
+
+        ArrayList<ContentValues> list;
+        list = CalendarHelper.getPeopleContentValues(eventID, c.getRequiredPeople(), CalendarContract.Attendees.TYPE_REQUIRED);
+        for(ContentValues v : list) {
+            cr.insert(syncUri, v);
+        }
+        list.clear();
+
+        list = CalendarHelper.getPeopleContentValues(eventID, c.getOptionalPeople(), CalendarContract.Attendees.TYPE_OPTIONAL);
+        for(ContentValues v : list) {
+            cr.insert(syncUri, v);
+        }
+        list.clear();
+
+        list = CalendarHelper.getPeopleContentValues(eventID, c.getResources(), CalendarContract.Attendees.TYPE_RESOURCE);
+        for(ContentValues v : list) {
+            cr.insert(syncUri, v);
+        }
+        list.clear();
+    }
+
+    private static void updatePeople(ContentResolver cr, Account account, String eventID, CalendarEntry c) {
+        String[] selArgs = new String[]{eventID};
+
+        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Attendees.CONTENT_URI, account, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/);
+
+        ArrayList<ContentValues> list;
+        list = CalendarHelper.getPeopleContentValues(eventID, c.getRequiredPeople(), CalendarContract.Attendees.TYPE_REQUIRED);
+        for(ContentValues v : list) {
+            cr.update(syncUri, v, CalendarContract.Attendees._ID + " =? ", selArgs);
+        }
+        list.clear();
+
+        list = CalendarHelper.getPeopleContentValues(eventID, c.getOptionalPeople(), CalendarContract.Attendees.TYPE_OPTIONAL);
+        for(ContentValues v : list) {
+            cr.update(syncUri, v, CalendarContract.Attendees._ID + " =? ", selArgs);
+        }
+        list.clear();
+
+        list = CalendarHelper.getPeopleContentValues(eventID, c.getResources(), CalendarContract.Attendees.TYPE_RESOURCE);
+        for(ContentValues v : list) {
+            cr.update(syncUri, v, CalendarContract.Attendees._ID + " =? ", selArgs);
+        }
+        list.clear();
+    }
+
     //this is bugged in exchange server, workaround is to loop over all emails to look for the accept message
-    public static int getStatusFormAppointment(MeetingResponseType m) {
+    public static int getStatusFromAppointment(MeetingResponseType m) {
         if(m == MeetingResponseType.Accept)
             return CalendarContract.Attendees.ATTENDEE_STATUS_ACCEPTED;
         else if(m == MeetingResponseType.NoResponseReceived)
@@ -215,7 +257,7 @@ public class CalendarHelper {
     public static void clearCalendarEntries(Context context, Account account) {
         String cal_id = CalendarHelper.getCalendarId(context, account);
         if(cal_id == null) {
-          Log.e(TAG, "Error jersdf");
+          Log.e(TAG, "Error calendar id is invalid");
             return;
         }
 
@@ -224,15 +266,6 @@ public class CalendarHelper {
         String[] selectionArgs = new String[] { cal_id };
         int rows = context.getContentResolver().delete(CalendarContract.Events.CONTENT_URI, selection, selectionArgs);
         Log.i(TAG, rows + " events deleted");
-    }
-
-    public static int deleteCalendarEntry(ContentResolver cr, long event_id) {
-        String[] selArgs = new String[]{Long.toString(event_id)};
-        int deleted =
-                cr.delete(CalendarContract.Events.CONTENT_URI,
-                        CalendarContract.Events._ID + " =? ",
-                        selArgs);
-        return deleted;
     }
 
     public static boolean deleteCalendar(long id, Account account, ContentResolver cr) {
@@ -268,33 +301,30 @@ public class CalendarHelper {
         return cv;
     }
 
-    public static long fetchCalendars(Account account, ContentResolver cr) {
-        //TODO Replace account.name by class member attrbute?
-
-        // Run query
-        Cursor cur = null;
-        Uri uri = CalendarContract.Calendars.CONTENT_URI;
-        String selection = "((" + CalendarContract.Calendars.ACCOUNT_NAME + " = ?) AND (" + CalendarContract.Calendars.ACCOUNT_TYPE + " = ?))";
-        String[] selectionArgs = new String[] {account.name, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/};
-        // Submit the query and get a Cursor object back.
-        cur = cr.query(uri, EVENT_PROJECTION, selection, selectionArgs, null);
-
-        // Use the cursor to step through the returned records
-        while (cur.moveToNext()) {
-            // Get the field values
-            long id = cur.getLong(PROJECTION_ID_INDEX);
-            String name = cur.getString(PROJECTION_DISPLAY_NAME_INDEX);
-            int color = cur.getInt(PROJECTION_COLOR_INDEX);
-
-            /*System.out.println(name);
-            System.out.println(id);
-            System.out.println(color);*/
-
-            if(name == account.name)
-                return id;
+    public static <T extends Enum<T>> T getEnumFromString(Class<T> c, String string)
+    {
+        if( c != null && string != null ) {
+            try {
+                return Enum.valueOf(c, string.trim().toUpperCase());
+            }
+            catch(IllegalArgumentException ex) { }
         }
-        cur.close();
-        return -1;
+        return null;
+    }
+
+    public static IAdapter getAndroidCalendarAdapter(Context context, Account account) {
+        return new AndroidAdapter(context, account);
+    }
+
+    public static IAdapter getCalendarAdapter(Context context, Account account) {
+        IAdapter adapter = null;
+        AccountManager am = AccountManager.get(context);
+        CalendarType type = CalendarType.fromString(am.getUserData(account, "ADAPTER_TYPE"));
+        if(type == CalendarHelper.CalendarType.ANDROID_CALENDAR)
+            return new AndroidAdapter(context, account);
+        else if(type == CalendarHelper.CalendarType.EXCHANGE_CALENDAR)
+            return new ExchangeAdapter(context, account);
+        return adapter;
     }
 
     public static long dumpCalendarEntries(Account account, ContentResolver cr) {
@@ -330,31 +360,30 @@ public class CalendarHelper {
         return -1;
     }
 
-    public static <T extends Enum<T>> T getEnumFromString(Class<T> c, String string)
-    {
-        if( c != null && string != null ) {
-            try {
-                return Enum.valueOf(c, string.trim().toUpperCase());
-            }
-            catch(IllegalArgumentException ex) { }
+    /*public static long fetchCalendars(Account account, ContentResolver cr) {
+        //TODO Replace account.name by class member attrbute?
+
+        // Run query
+        Cursor cur = null;
+        Uri uri = CalendarContract.Calendars.CONTENT_URI;
+        String selection = "((" + CalendarContract.Calendars.ACCOUNT_NAME + " = ?) AND (" + CalendarContract.Calendars.ACCOUNT_TYPE + " = ?))";
+        String[] selectionArgs = new String[] {account.name, "com.bedroid.beEx.account"};
+        // Submit the query and get a Cursor object back.
+        cur = cr.query(uri, EVENT_PROJECTION, selection, selectionArgs, null);
+
+        // Use the cursor to step through the returned records
+        while (cur.moveToNext()) {
+            // Get the field values
+            long id = cur.getLong(PROJECTION_ID_INDEX);
+            String name = cur.getString(PROJECTION_DISPLAY_NAME_INDEX);
+            int color = cur.getInt(PROJECTION_COLOR_INDEX);
+
+            if(name == account.name)
+                return id;
         }
-        return null;
-    }
-
-    public static IAdapter getAndroidCalendarAdapter(Context context, Account account) {
-        return new AndroidAdapter(context, account);
-    }
-
-    public static IAdapter getCalendarAdapter(Context context, Account account) {
-        IAdapter adapter = null;
-        AccountManager am = AccountManager.get(context);
-        CalendarType type = CalendarType.fromString(am.getUserData(account, "ADAPTER_TYPE"));
-        if(type == CalendarHelper.CalendarType.ANDROID_CALENDAR)
-            return new AndroidAdapter(context, account);
-        else if(type == CalendarHelper.CalendarType.EXCHANGE_CALENDAR)
-            return new ExchangeAdapter(context, account);
-        return adapter;
-    }
+        cur.close();
+        return -1;
+    }*/
 
     /*
     // https://github.com/RHSAndroidDevs/RHSSchoolPlanner/blob/master/src/edu/rhs/school_planner/Homework.java

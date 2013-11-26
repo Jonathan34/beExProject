@@ -9,6 +9,7 @@ import android.provider.CalendarContract;
 
 import com.bedroid.beEx.entity.CalendarEntry;
 import com.bedroid.beEx.entity.People;
+import com.bedroid.beEx.helper.CalendarHelper;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -30,7 +31,7 @@ public class AndroidAdapter extends GenericAdapter {
     public HashMap<String, CalendarEntry> getAppointments() {
         /****TEST*****/
         // Compute number of dirty events in the calendar
-        final String[] EVENTS_PROJECTION = new String[]{
+        /*final String[] EVENTS_PROJECTION = new String[]{
                 CalendarContract.Events._ID,
         };
         String dirtyWhere = CalendarContract.Events.CALENDAR_ID + "=" + 1
@@ -43,10 +44,8 @@ public class AndroidAdapter extends GenericAdapter {
             dirtyCount = dirtyCursor.getCount();
         } finally {
             dirtyCursor.close();
-        }
+        }*/
         /****TEST*****/
-
-
 
         HashMap<String, CalendarEntry> result = new HashMap<String, CalendarEntry>();
 
@@ -65,13 +64,18 @@ public class AndroidAdapter extends GenericAdapter {
         while (c.moveToNext()) {
             CalendarEntry ce = new CalendarEntry();
 
-            ce.setCalendarId(c.getLong(c.getColumnIndex(CalendarContract.Events._ID)));
+            ce.setEventId(c.getString(c.getColumnIndex(CalendarContract.Events._ID)));
+            ce.setCalendarId(c.getLong(c.getColumnIndex(CalendarContract.Events.CALENDAR_ID)));
             ce.setColor(c.getInt(c.getColumnIndex(CalendarContract.Events.CALENDAR_COLOR)));
 
             String tz = c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_TIMEZONE));
             String tze = c.getString(c.getColumnIndex(CalendarContract.Events.EVENT_END_TIMEZONE));
             ce.setTimeZone(TimeZone.getTimeZone(tz));
-            ce.setEndTimeZone(TimeZone.getTimeZone(tze));
+            if(tze != null) //tze=null if event is created from stock calendar
+                ce.setEndTimeZone(TimeZone.getTimeZone(tze));
+            else
+                ce.setEndTimeZone(TimeZone.getTimeZone(tz));
+
 
             Calendar cal = Calendar.getInstance();
             cal.setTimeInMillis(Long.parseLong(c.getString(c.getColumnIndex(CalendarContract.Events.DTSTART))));
@@ -88,7 +92,6 @@ public class AndroidAdapter extends GenericAdapter {
             ce.setAllDay(c.getInt(c.getColumnIndex(CalendarContract.Events.ALL_DAY)) == 1 ? true : false);
             ce.setDescription(c.getString(c.getColumnIndex(CalendarContract.Events.DESCRIPTION)));
             ce.setTitle(c.getString(c.getColumnIndex(CalendarContract.Events.TITLE)));
-            ce.setStatus(c.getString(c.getColumnIndex(CalendarContract.Events.STATUS)));
 
             cal.setTimeInMillis(c.getLong(c.getColumnIndex(CalendarContract.Events.SYNC_DATA1)));
             ce.setLastModificationTime(cal.getTime());
@@ -152,5 +155,13 @@ public class AndroidAdapter extends GenericAdapter {
         }
         c.close();
         return result;
+    }
+
+    @Override
+    public boolean updateEntry(CalendarEntry local, CalendarEntry remote) {
+        if(local == null || remote == null)
+            return false;
+
+        return CalendarHelper.updateEntry(mContext, mAccount, local, remote) >= 0;
     }
 }

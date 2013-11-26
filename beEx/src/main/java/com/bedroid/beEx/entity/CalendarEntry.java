@@ -8,6 +8,7 @@ import java.util.TimeZone;
 
 import android.content.ContentValues;
 import android.provider.CalendarContract;
+import android.support.v7.appcompat.R;
 
 import microsoft.exchange.webservices.data.Appointment;
 import microsoft.exchange.webservices.data.AttendeeCollection;
@@ -33,7 +34,6 @@ public class CalendarEntry {
 
     private String location;
     private String description;
-    private String status;
     private String uid;
     private People organizer;
     private Date lastModificationTime;
@@ -46,6 +46,7 @@ public class CalendarEntry {
     private HashSet<People> mRequiredPeople = new HashSet<People>();
     private HashSet<People> mOptionalPeople = new HashSet<People>();
     private HashSet<People> mResources = new HashSet<People>();
+    private String eventId;
 
     public String getUid()  { return this.uid; }
 
@@ -125,10 +126,6 @@ public class CalendarEntry {
 
     public String getLocation() { return location; }
 
-    public void setStatus(String status) { this.status = status; }
-
-    public String getStatus() { return status; }
-
     @Override
     //public String toString() { return getTitle() + " by " + getOrganizer().getName() + ": " + getStart().toString(); }
     public String toString() { return getKey(); }
@@ -158,7 +155,6 @@ public class CalendarEntry {
                 //&& this.getColor() == that.getColor()
         res = res && (this.getLocation() == null && that.getLocation() == null ? true : this.getLocation().equals(that.getLocation()));
         res = res && this.getKey().equals(that.getKey());
-        res = res && (this.getStatus() == null && that.getStatus() == null ? true : this.getStatus().equals(that.getStatus()));
         res = res && (this.getDescription() == null && that.getDescription() == null ? true : this.getDescription().equals(that.getDescription()));
         res = res && this.getTimeZone().equals(that.getTimeZone());
         return res;
@@ -219,6 +215,10 @@ public class CalendarEntry {
         values.put(CalendarContract.Events.DIRTY, /*ce.isDirty() ? 1 : */0);
         values.put(CalendarContract.Events.DELETED, /*ce.isDeleted() ? 1 : */0);
 
+        //TODO values.put(CalendarContract.Events.SELF_ATTENDEE_STATUS, ce.getMyResponseType().ordinal());
+
+        values.put(CalendarContract.Events.CALENDAR_ID, ce.getCalendarId());
+        values.put(CalendarContract.Events.ALL_DAY, ce.getAllDay() ? 1 : 0);
 
 
         //Compute duration
@@ -241,14 +241,7 @@ public class CalendarEntry {
         values.put(CalendarContract.Events.DURATION, duration);*/
         //
 
-        values.put(CalendarContract.Events.UID_2445, ce.getUid());
-        values.put(CalendarContract.Events.STATUS, ce.getStatus());
-        values.put(CalendarContract.Events.LAST_DATE, ce.getStatus());
 
-        //TODO values.put(CalendarContract.Events.SELF_ATTENDEE_STATUS, ce.getMyResponseType().ordinal());
-
-        values.put(CalendarContract.Events.CALENDAR_ID, ce.getCalendarId());
-        values.put(CalendarContract.Events.ALL_DAY, ce.getAllDay() ? 1 : 0);
         //values.put(CalendarContract.Events.LAST_DATE, )
 
         return values;
@@ -332,6 +325,14 @@ public class CalendarEntry {
 
     public HashSet<People> getResources() {
         return mResources;
+    }
+
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
+    }
+
+    public String getEventId() {
+        return eventId;
     }
 
     /*public static CalendarEntry createFromAppointment(Appointment appointment) {

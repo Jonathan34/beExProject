@@ -12,4 +12,6 @@ public abstract interface IAdapter {
     public IAdapter createInstance(Context c, Account a);
 
     public abstract HashMap<String, CalendarEntry> getAppointments();
+
+    public abstract boolean updateEntry(CalendarEntry local, CalendarEntry remote);
 }

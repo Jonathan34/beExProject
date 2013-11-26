@@ -117,9 +117,12 @@ public class CalendarSyncAdapterService extends Service {
                                 long rmd = rval.getLastModificationTime().getTime();
                                 if(lmd < rmd) {
                                     Log.i(TAG, "\t Entry is NOT identical... updating LOCAL");
+                                    localAdapter.updateEntry(lval, rval);
                                 }
                                 else {
                                     Log.i(TAG, "\t Entry is NOT identical... updating REMOTE");
+                                    remoteAdapter.updateEntry(lval, rval);
+                                    //TODO also update local last modification date to avoid downloading again the update on next sync
                                 }
                             }
                             else {
@@ -129,8 +132,17 @@ public class CalendarSyncAdapterService extends Service {
                         remoteItems.remove(lkey);//processed
                     }
                     else {
-                        // Entry doesn't exist. Remove it from the database.
-                        Log.i(TAG, "\t Entry does not exist... removing from local database");
+                        //TODO either it does not exist, either it has to be created on server...
+                        //UID is not set if it has to be created on server...?
+                        if(lval.getUid() == null) {
+                            Log.i(TAG, "\t Entry has been created... creating on remote database");
+                            //TODO
+                        }
+                        else {
+                            // Entry doesn't exist. Remove it from the database.
+                            int deleted = CalendarHelper.deleteCalendarEntry(mContext.getContentResolver(), Long.parseLong(lval.getEventId()));
+                            Log.i(TAG, "\t Entry does not exist... removing from local database: " + deleted);
+                        }
                     }
                 }
 

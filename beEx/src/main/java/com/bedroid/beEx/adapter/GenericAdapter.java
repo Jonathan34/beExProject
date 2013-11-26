@@ -22,4 +22,7 @@ public abstract class GenericAdapter implements IAdapter{
 
     @Override
     public abstract HashMap<String, CalendarEntry> getAppointments();
+
+    @Override
+    public abstract boolean updateEntry(CalendarEntry local, CalendarEntry remote);
 }
