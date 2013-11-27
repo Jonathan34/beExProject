@@ -23,6 +23,7 @@ import microsoft.exchange.webservices.data.ExchangeCredentials;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.ExchangeVersion;
 import microsoft.exchange.webservices.data.FindItemsResults;
+import microsoft.exchange.webservices.data.ServiceRemoteException;
 import microsoft.exchange.webservices.data.WebCredentials;
 import microsoft.exchange.webservices.data.WellKnownFolderName;
 
@@ -65,7 +66,7 @@ public class ExchangeHelper {
         return mService;
     }
 
-    public ExchangeService connectToExchange(String serverUrl, String email, String password) throws Exception {
+    public ExchangeService connectToExchange(/*String serverUrl, */String email, String password) throws Exception {
         if(mService != null)
             return mService;
         mService = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
@@ -78,10 +79,10 @@ public class ExchangeHelper {
         return mService;
     }
 
-    public void getCalendarTest() throws Exception {
+    /*public FindItemsResults<Appointment> getCalendarTest() throws Exception {
         if(mService == null) {
             Log.e(TAG, "getCalendarTest: null service");
-            return;
+            return null;
         }
         //CALENDAR
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -91,16 +92,8 @@ public class ExchangeHelper {
         CalendarView view = new CalendarView(startTime, endTime);
 
         CalendarFolder folder = CalendarFolder.bind(mService, WellKnownFolderName.Calendar);
-        FindItemsResults<Appointment> results = folder.findAppointments(view);
-
-        for (Appointment appointment : results.getItems())
-        {
-            System.out.println("appointment======" + appointment.getSubject()) ;
-            //find appointments will only give basic properties.
-            //in order to get more properties (such as BODY), we need to call call EWS again
-            //Appointment appointmentDetailed = Appointment.bind(service, appointment.getId(), );
-        }
-    }
+        return folder.findAppointments(view);
+    }*/
 
     public void initializeContext(Context context) {
         mContext = context;
@@ -113,4 +106,20 @@ public class ExchangeHelper {
     }
 
 
+    public boolean isConnectionValid(String email, String password) {
+        ExchangeHelper eh = ExchangeHelper.getInstance();
+        try {
+            mService = eh.connectToExchange(email, password);
+            return true;
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        catch (ServiceRemoteException e) {
+            e.printStackTrace();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

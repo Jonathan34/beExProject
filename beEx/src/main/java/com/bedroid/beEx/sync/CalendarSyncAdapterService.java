@@ -38,10 +38,8 @@ import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.FindItemsResults;
 
 public class CalendarSyncAdapterService extends Service {
-
     private static final String TAG = "CalendarSyncAdapterService";
     private static SyncAdapterImpl sSyncAdapter = null;
-    //
 
     public CalendarSyncAdapterService() {
         super();
@@ -58,47 +56,34 @@ public class CalendarSyncAdapterService extends Service {
         @Override
         public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
             try {
-                ///*new */CalendarSyncAdapterService/*()*/.performSync(mContext, account, extras, authority, provider, syncResult);
-
                 Calendar cal = Calendar.getInstance();
                 Log.i(TAG, "performSync: " + account.toString() + " at " + cal.getTime().toString());
 
                 IAdapter remoteAdapter = CalendarHelper.getCalendarAdapter(mContext, account);
                 IAdapter localAdapter = CalendarHelper.getAndroidCalendarAdapter(mContext, account);
 
-                // 1.a Retrieve local items
-                //HashMap<String, CalendarEntry> localItems = CalendarHelper.loadFromLocalCalendar(mContext, account);
+                // Retrieve local items
                 HashMap<String, CalendarEntry> localItems = localAdapter.getAppointments();
 
-                // 1.b Retrieve remote items
-                //HashMap<String, CalendarEntry> remoteItems = CalendarHelper.loadFromRemoteCalendar(mContext, service);
+                // Retrieve remote items
                 HashMap<String, CalendarEntry> remoteItems = remoteAdapter.getAppointments();
 
                 //CalendarHelper.dumpCalendarEntries(account, mContext.getContentResolver());
 
-                //1.c debug
-                StringBuilder sb = new StringBuilder("--CALENDAR LOCAL DUMP--");
+                /*StringBuilder sb = new StringBuilder("--CALENDAR LOCAL DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: localItems.entrySet()) {
-                    sb.append("\n("+s.getKey() /*+"|"+s.getValue()*/+")");
+                    sb.append("\n(" + s.getKey() + ")");
                 }
                 sb.append("----------");
                 Log.i(TAG, sb.toString());
 
                 sb = new StringBuilder("--CALENDAR REMOTE DUMP--");
                 for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
-                    sb.append("\n("+s.getKey()/*+"|"+s.getValue()*/+")");
+                    sb.append("\n(" + s.getKey() + ")");
                 }
                 sb.append("----------");
-                Log.i(TAG, sb.toString());
+                Log.i(TAG, sb.toString());*/
 
-                // TODO do processed - local
-                //Set<String> deletedKeys = remoteItems.keySet();
-                //deletedKeys.removeAll(localItems.keySet());
-                //Log.i(TAG, "Deleted: " + deletedKeys.toString());
-
-                Set<String> processedEntries = new HashSet<String>();
-
-                //TODO Remove -- clears up everything we have
                 //CalendarHelper.clearCalendarEntries(mContext, account);
 
                 for (Map.Entry<String, CalendarEntry> s: localItems.entrySet()) {
@@ -111,7 +96,6 @@ public class CalendarSyncAdapterService extends Service {
                         if(rval != null) {
                             Log.i(TAG, "Checking if update is required with " + lkey);
                             if(!lval.equals(rval)) {
-                                //update
                                 //check if remote or local changes? use last sync date and compare to remote last modification date?
                                 long lmd = lval.getLastModificationTime().getTime();
                                 long rmd = rval.getLastModificationTime().getTime();
@@ -129,7 +113,7 @@ public class CalendarSyncAdapterService extends Service {
                                 Log.i(TAG, "\t Entry is identical... nothing to do");
                             }
                         }
-                        remoteItems.remove(lkey);//processed
+                        remoteItems.remove(lkey);// mark remote item as processed
                     }
                     else {
                         //TODO either it does not exist, either it has to be created on server...
@@ -154,101 +138,7 @@ public class CalendarSyncAdapterService extends Service {
                         Log.i(TAG, "Added entry " + id);
                     }
                 }
-                /*for (Map.Entry<String, CalendarEntry> s: remoteItems.entrySet()) {
-                    String rkey = s.getKey();
-                    CalendarEntry rval = s.getValue();
-
-                    if(rkey == null || rkey.isEmpty()) {
-                        Log.e(TAG, "Incorrect entry found");
-                        continue;
-                    }
-
-                    Log.i(TAG, "Treating: " + rkey);
-
-                    //have we already see this entry?
-                    if(processedEntries.contains(rkey)) {
-                        Log.w(TAG, "Already processed from server: skipping ");
-                        continue;
-                    }
-
-                    //check if we have this entry locally and update it
-                    if(localItems.containsKey(rkey)) {
-                        //TODO update
-                        //TODO check for local changes
-                        CalendarEntry lval = localItems.get(rkey);
-                        Log.i(TAG, "Checking if update is required with " + lval.getKey());
-
-                        if(lval.equals(rval)) {
-                            Log.i(TAG, "\t Entry is identical... nothing to do");
-                        }
-                        else {
-                            //TODO changes found, upload
-                            Log.i(TAG, "\t Entry is NOT identical... updating");
-                           // Calendar ldate = Calendar.getInstance();
-                            //if(lval.getLastModificationTime() != null && rval.getLastModificationTime() != null) {
-                            if(lval.isDirty()) {
-                                /*ldate.setTime(lval.getLastModificationTime());
-
-                                Calendar rdate = Calendar.getInstance();
-                                rdate.setTime(rval.getLastModificationTime());
-
-                                if(ldate.before(rdate)) {
-                                    Log.i(TAG, "\t updating local " + rkey);
-                                }
-                                else {
-                                    Log.i(TAG, "\t updating remote " + rkey);
-                                }*/
-                                //update remote
-                                /*Log.i(TAG, "\t updating remote " + rkey);
-                            }
-                            else {
-                                Log.e(TAG, "\t need to update from remote" + rkey);
-                            }
-
-                        }
-
-                        //TODO no change found, nothing to do
-                        //TODO check for remote changes
-                    }
-                    else {
-                        //TODO Add remote entry on local side
-                        String id = CalendarHelper.addCalendarEntry(mContext, account, rval);
-                        Log.i(TAG, "Added entry " + id);
-                    }
-
-                    //flag entry as processed
-                   //todo flag correctly processed entries (what if the entry is not updated or added? it is probably deleted?
-                   processedEntries.add(rkey);
-
-                }*/
-                // do processed - local
-                //Set<String> unprocessedKeys = localItems.keySet();
-                //unprocessedKeys.removeAll(processedEntries);
-                //Log.i(TAG, "Not processed: " + unprocessedKeys.toString());
-
-
-                /*FindItemsResults<Appointment> appointments = eh.getCalendarItems();
-                for (Appointment appointment : appointments.getItems())
-                {
-                    if(appointment == null) {
-                        Log.e(TAG, "Got a null appointment!");
-                        continue;
-                    }
-
-                    //CalendarEntry.createFromAppointment(appointment);
-                    //Test if appointment already exists
-                    Appointment a = Appointment.bind(service, appointment.getId());
-                    String ei = CalendarHelper.addCalendarEntry(mContext.getContentResolver(), Long.parseLong(id), a);
-                    Log.i(TAG, "Calendar entry created " + ei);
-                }*/
-
-            }/* catch (OperationCanceledException e) {
-                e.printStackTrace();
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            } catch (ParseException e) {
-                e.printStackTrace();
-            } */catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -265,27 +155,4 @@ public class CalendarSyncAdapterService extends Service {
             sSyncAdapter = new SyncAdapterImpl(this);
         return sSyncAdapter;
     }
-
-    /*private static void performSync(Context context, Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult)
-            throws OperationCanceledException {
-        System.out.println("????");
-    }*/
 }
-      /*long id = CalendarHelper.fetchCalendars(account, context.getContentResolver());
-            if(id == -1) {
-                System.out.println("Adding...");
-                CalendarHelper.addCalendar(account, context.getContentResolver());
-            }*/
-
-            /*
-            System.out.println("Deleting");
-            for(int i=0;i<10;i++)
-                CalendarHelper.deleteCalendar(i, account, context.getContentResolver());
-            */
-
-            /*System.out.println("After add");
-            id = CalendarHelper.fetchCalendars(account, context.getContentResolver());
-            if(id == -1) {
-                System.out.println("Does not exist... returning");
-                return;
-            }*/

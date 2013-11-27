@@ -29,6 +29,9 @@ import microsoft.exchange.webservices.data.ServiceLocalException;
 public class CalendarHelper {
     private static final String TAG = "CalendarHelper";
 
+    /**
+     * Enum to define which calendar type we are syncing
+     */
     public enum CalendarType {
         ANDROID_CALENDAR,
         EXCHANGE_CALENDAR;
@@ -40,16 +43,13 @@ public class CalendarHelper {
 
     // Projection array. Creating indices for this array instead of doing
     // dynamic lookups improves performance.
-    private static final String[] EVENT_PROJECTION = new String[] {
-            /*CalendarContract.Calendars._ID, // 0
-            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, // 1
-            CalendarContract.Calendars.CALENDAR_COLOR // 2*/
+    /*private static final String[] EVENT_PROJECTION = new String[] {
             CalendarContract.Calendars._ID,
             CalendarContract.Calendars.ACCOUNT_NAME,
             CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
             CalendarContract.Calendars.NAME,
             CalendarContract.Calendars.CALENDAR_COLOR,
-    };
+    };*/
 
     // The indices for the projection array above.
     private static final int PROJECTION_ID_INDEX = 0;
@@ -137,26 +137,27 @@ public class CalendarHelper {
         return deleted;
     }
 
+    /**
+     * Update an entry in stock calendar
+     * @param context
+     * @param account
+     * @param local
+     * @param remote
+     * @return
+     */
     public static int updateEntry(Context context, Account account, CalendarEntry local, CalendarEntry remote) {
-        //get all content values from the calendar entry
-
         //update the remote calendar id for the update
         remote.setCalendarId(local.getCalendarId());
 
+        //get calendar entry content
         ContentValues values = CalendarEntry.getContentValues(remote);
+
         ContentResolver cr = context.getContentResolver();
         String[] selArgs = new String[]{local.getEventId()};
 
-        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Events.CONTENT_URI, account, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/);
-        //Uri uri = cr.insert(syncUri, values);
+        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Events.CONTENT_URI, account, "com.bedroid.beEx.account");
 
-        int updated =
-                cr.
-                        update(
-                                syncUri,
-                                values,
-                                CalendarContract.Events._ID + " =? ",
-                                selArgs);
+        int updated = cr.update(syncUri, values, CalendarContract.Events._ID + " =? ", selArgs);
 
         System.out.println(updated);
         CalendarHelper.updatePeople(context.getContentResolver(), account, local.getEventId(), remote);
@@ -180,9 +181,7 @@ public class CalendarHelper {
     }
 
     private static void addPeople(ContentResolver cr, Account account, String eventID, CalendarEntry c) {
-        ContentValues values = new ContentValues();
-
-        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Attendees.CONTENT_URI, account, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/);
+        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Attendees.CONTENT_URI, account, "com.bedroid.beEx.account");
 
         ArrayList<ContentValues> list;
         list = CalendarHelper.getPeopleContentValues(eventID, c.getRequiredPeople(), CalendarContract.Attendees.TYPE_REQUIRED);
@@ -207,7 +206,7 @@ public class CalendarHelper {
     private static void updatePeople(ContentResolver cr, Account account, String eventID, CalendarEntry c) {
         String[] selArgs = new String[]{eventID};
 
-        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Attendees.CONTENT_URI, account, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/);
+        Uri syncUri = CalendarHelper.buildCalUri(CalendarContract.Attendees.CONTENT_URI, account, "com.bedroid.beEx.account");
 
         ArrayList<ContentValues> list;
         list = CalendarHelper.getPeopleContentValues(eventID, c.getRequiredPeople(), CalendarContract.Attendees.TYPE_REQUIRED);
@@ -272,7 +271,7 @@ public class CalendarHelper {
         if (id < 0)
             throw new IllegalArgumentException();
 
-        Uri calUri = ContentUris.withAppendedId(buildCalUri(CalendarContract.Calendars.CONTENT_URI, account, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/), id);
+        Uri calUri = ContentUris.withAppendedId(buildCalUri(CalendarContract.Calendars.CONTENT_URI, account, "com.bedroid.beEx.account"), id);
         return cr.delete(calUri, null, null) == 1;
     }
 
@@ -288,7 +287,7 @@ public class CalendarHelper {
     private static ContentValues buildContentValues(Account account) {
         final ContentValues cv = new ContentValues();
         cv.put(CalendarContract.Calendars.ACCOUNT_NAME, account.name);
-        cv.put(CalendarContract.Calendars.ACCOUNT_TYPE, /*CalendarContract.ACCOUNT_TYPE_LOCAL*/"com.bedroid.beEx.account");
+        cv.put(CalendarContract.Calendars.ACCOUNT_TYPE, "com.bedroid.beEx.account");
         cv.put(CalendarContract.Calendars.NAME, account.name);
         cv.put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, account.name);
         cv.put(CalendarContract.Calendars.CALENDAR_COLOR, 0xFF008080);  //TODO Configure
@@ -297,6 +296,7 @@ public class CalendarHelper {
         cv.put(CalendarContract.Calendars.VISIBLE, 1);
         cv.put(CalendarContract.Calendars.SYNC_EVENTS, 1);
         String tz =  TimeZone.getDefault().getID();
+        System.out.println("android calendar timezone: " + tz);
         cv.put(CalendarContract.Calendars.CALENDAR_TIME_ZONE, tz);
         return cv;
     }
@@ -316,6 +316,12 @@ public class CalendarHelper {
         return new AndroidAdapter(context, account);
     }
 
+    /**
+     * Get the calendar adapter associated with the account
+     * @param context
+     * @param account
+     * @return
+     */
     public static IAdapter getCalendarAdapter(Context context, Account account) {
         IAdapter adapter = null;
         AccountManager am = AccountManager.get(context);
@@ -327,7 +333,7 @@ public class CalendarHelper {
         return adapter;
     }
 
-    public static long dumpCalendarEntries(Account account, ContentResolver cr) {
+    /*public static long dumpCalendarEntries(Account account, ContentResolver cr) {
         //Duration is RFC5545
 
         // Run query
@@ -341,16 +347,12 @@ public class CalendarHelper {
 
 
         String selection = "((" + CalendarContract.Calendars.ACCOUNT_NAME + " = ?) AND (" + CalendarContract.Calendars.ACCOUNT_TYPE + " = ?))";
-        String[] selectionArgs = new String[] {account.name, "com.bedroid.beEx.account"/*CalendarContract.ACCOUNT_TYPE_LOCAL*/};
+        String[] selectionArgs = new String[] {account.name, "com.bedroid.beEx.account"};
         // Submit the query and get a Cursor object back.
-        cur = cr.query(/*uri*/builder.build(), null, selection, selectionArgs, null);
+        cur = cr.query(builder.build(), null, selection, selectionArgs, null);
 
         // Use the cursor to step through the returned records
         while (cur.moveToNext()) {
-            // Get the field values
-            //long id = cur.getLong(PROJECTION_ID_INDEX);
-            //String name = cur.getString(PROJECTION_DISPLAY_NAME_INDEX);
-            //int color = cur.getInt(PROJECTION_COLOR_INDEX);
             for(int i=0; i<cur.getColumnCount(); i++) {
                 System.out.println(cur.getColumnName(i) + " -> " + cur.getString(i));
             }
@@ -358,7 +360,7 @@ public class CalendarHelper {
         }
         cur.close();
         return -1;
-    }
+    }*/
 
     /*public static long fetchCalendars(Account account, ContentResolver cr) {
         //TODO Replace account.name by class member attrbute?

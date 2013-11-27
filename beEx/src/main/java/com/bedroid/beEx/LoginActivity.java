@@ -284,30 +284,9 @@ public class LoginActivity extends AccountAuthenticatorActivity {
         protected Boolean doInBackground(Void... params) {
             // attempt authentication against the network service.
             /************************************************************/
-            try {
-                /*ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
-                ExchangeCredentials credentials = new WebCredentials(mEmail, mPassword);
-                service.setCredentials(credentials);
-                URI url = new URI(mServerUrl);
-                service.setUrl(url);*/
-                //ExchangeService service = ExchangeHelper.getInstance().connectToExchange(mServerUrl, mEmail, mPassword);
-                //System.out.println(service.getUrl().toString());
-
-                //CALENDAR
-                //ExchangeHelper.getInstance().getCalendarTest();
-
-                //EMAIL
-                /*FindFoldersResults findResults = service.findFolders(WellKnownFolderName.Inbox, new FolderView(Integer.MAX_VALUE));
-
-                for(Folder folder : findResults.getFolders())
-                {
-                    System.out.println("Count======"+folder.getChildFolderCount());
-                    System.out.println("Name======="+folder.getDisplayName());
-                }*/
-            /*} catch (URISyntaxException e) {
-                e.printStackTrace();*/
-            } catch (Exception e) {
-                e.printStackTrace();
+            ExchangeHelper eh = ExchangeHelper.getInstance();
+            if(!eh.isConnectionValid(mEmail, mPassword)) {
+                return false;
             }
 
             //Retrieve if the account exists and return it

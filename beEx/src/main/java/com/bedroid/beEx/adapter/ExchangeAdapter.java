@@ -26,6 +26,7 @@ import microsoft.exchange.webservices.data.BodyType;
 import microsoft.exchange.webservices.data.CalendarFolder;
 import microsoft.exchange.webservices.data.CalendarView;
 import microsoft.exchange.webservices.data.ConflictResolutionMode;
+import microsoft.exchange.webservices.data.EmailAddress;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.FindItemsResults;
 import microsoft.exchange.webservices.data.MessageBody;
@@ -69,11 +70,6 @@ public class ExchangeAdapter extends GenericAdapter {
                     continue;
                 }
 
-                //CalendarEntry.createFromAppointment(appointment);
-                //Test if appointment already exists
-                        /*String when = appointment.getWhen();
-                        Date start = appointment.getStart();
-                        Date end = appointment.getEnd();*/
                 PropertySet psPropSet = new PropertySet(BasePropertySet.FirstClassProperties);
                 psPropSet.setRequestedBodyType(BodyType.Text);
 
@@ -151,32 +147,35 @@ public class ExchangeAdapter extends GenericAdapter {
         CalendarView view = new CalendarView(startTime, endTime);
 
         CalendarFolder folder = CalendarFolder.bind(mService, WellKnownFolderName.Calendar);
-        /*FindItemsResults<Appointment> results = folder.findAppointments(view);
 
-        for (Appointment appointment : results.getItems())
-        {
-            System.out.println("appointment======" + appointment.getSubject()) ;
-            //find appointments will only give basic properties.
-            //in order to get more properties (such as BODY), we need to call call EWS again
-            //Appointment appointmentDetailed = Appointment.bind(service, appointment.getId(), );
-        }*/
         return folder.findAppointments(view);
     }
 
+    /**
+     * Create a calendar entry from an appointment
+     * @param a the appointment
+     * @return calendar entry
+     * @throws Exception
+     */
     public CalendarEntry loadFromAppointment(Appointment a) throws Exception {
         if (a == null)
             return null;
 
         CalendarEntry ce = new CalendarEntry();
 
-        String tz = a.getTimeZone();
-        ce.setTimeZone(TimeZone.getTimeZone(tz));
-
         ce.setTitle(a.getSubject());
+        ce.setTimeZone(TimeZone.getDefault());
         ce.setStart(a.getStart());
         ce.setEnd(a.getEnd());
         ce.setDescription(MessageBody.getStringFromMessageBody(a.getBody()));
-        ce.setOrganizer(new People(a.getOrganizer().getName(), a.getOrganizer().getAddress()));
+        EmailAddress ea = a.getOrganizer();
+        if(ea != null) {
+            ce.setOrganizer(new People(a.getOrganizer().getName(), a.getOrganizer().getAddress()));
+        }
+        else {
+            ce.setOrganizer(new People("No organiser set", "unknown@unknown"));
+        }
+
         ce.setAllDay(a.getIsAllDayEvent());
         ce.setUid(a.getId().getUniqueId());
         ce.setLocation(a.getLocation());

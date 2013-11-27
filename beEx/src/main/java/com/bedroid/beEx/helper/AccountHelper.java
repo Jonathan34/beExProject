@@ -3,9 +3,6 @@ package com.bedroid.beEx.helper;
 import android.accounts.AccountManager;
 import android.util.Log;
 
-/**
- * Created by Jon on 11/17/13.
- */
 public class AccountHelper {
 
     /*public Account getAccount(Context context) {

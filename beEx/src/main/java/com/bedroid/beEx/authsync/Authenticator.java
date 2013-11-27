@@ -73,6 +73,15 @@ public class Authenticator extends AbstractAccountAuthenticator {
                                  String accountType) {
         return null;
     }
+
+    /**
+     *
+     * @param response
+     * @param account
+     * @param authTokenType
+     * @param loginOptions
+     * @return
+     */
     @Override
     public Bundle getAuthToken(AccountAuthenticatorResponse response,
                                Account account, String authTokenType, Bundle loginOptions) {
@@ -134,6 +143,13 @@ public class Authenticator extends AbstractAccountAuthenticator {
         return null;
     }
 
+    /**
+     * Called when an account is removed so we can delete the associated calendar
+     * @param response
+     * @param account
+     * @return a bundle
+     * @throws NetworkErrorException
+     */
     @Override
     public Bundle getAccountRemovalAllowed(
             AccountAuthenticatorResponse response, Account account)
